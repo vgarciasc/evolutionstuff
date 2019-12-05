@@ -1,0 +1,45 @@
+<meta charset="utf-8">
+<html>
+    <head>
+        <title>mcts test</title>
+        <link rel="stylesheet" href="style.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/p5.min.js" integrity="sha256-WVsM3xrcqyuFNF3W1qtIKbHFsD0977nDQA8DCMp1zCw=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/addons/p5.dom.min.js" integrity="sha256-2/3R3NV5zryj0fDjD3cDh+SNiWQ/TJiMVZzAo5FrhiU=" crossorigin="anonymous"></script>
+        <script src="./lib/tictactoe.js"></script>
+        <script src="./lib/mcts.js"></script>
+        <script src="./sketch.js"></script>
+        <!-- <script src="./sketch.js"></script> -->
+        <!-- <script src="./lib/nn.js"></script> -->
+    </head>
+    <body>
+        <h1>MCTS Tic-tac-toe (<i>Monte Carlo Tree Search</i>)</h1>
+        <div id="canvascontainer"></div>
+        <p id="starting_player_area">
+            <b>Who will start the game?</b>
+            <br>
+            <button onclick="selectStartingPlayer(0)">HUMAN (You!)</button>
+            <button onclick="selectStartingPlayer(1)">MACHINE</button>
+        </p>
+        <p id="whoseturn_area">
+            <b>Whose turn?</b> <span id="whoseturn">HUMAN</span>
+        </p>
+        <p id="machine_controls_area">
+            <b>Machine controls:</b>
+            <br>
+            <br>
+            <button onclick="machineRandomMove()">Make random move</button>
+            <br>
+            <button onclick="machineMctsMove()">Make MCTS move</button>
+            <br>
+            <br>
+            Run MCTS for:
+            <input id="mcts_timeout_slider" type="range" min="0" max="10" value="1"/>
+            <span id="mcts_timeout_span"><b>1</b></span> seconds
+        </p>
+        <p id="game_over_area">
+            <b>The winner is</b> <span id="game_over_winner">HUMAN</span>!
+            <br>
+            <button onclick="reset()">Restart game</button>
+        </p>
+    </body>
+</html>
