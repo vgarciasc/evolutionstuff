@@ -162,6 +162,13 @@ function machineMctsMove() {
     endMove(PLAYER.MACHINE);
 }
 
+function machineGaMove() {
+    let monteCarlo = new MCTS(TTT_BOARD.copy());
+    let bestMove = monteCarlo.runSearch(mctsTimeoutSlider.value());
+    TTT_BOARD.makeMove(bestMove);
+    endMove(PLAYER.MACHINE);
+}
+
 function endMove(player) {
     if (TTT_BOARD.checkWin() != "") {
         stateTransition(GameStates.GAME_OVER);
@@ -177,4 +184,115 @@ function makeMove(pos) {
     TTT_BOARD.print();
     machineMctsMove();
     TTT_BOARD.print();
+}
+
+function trainTabularQ() {
+    let results = {};
+    let epochs = 65000;
+
+    let epsilon = 0.5;
+    let EPSILON_START_DECAY = round(2 * epochs / 4);
+    let EPSILON_FNISH_DECAY = round(3 * epochs / 4);
+    let epsilon_decay_value = epsilon / (EPSILON_FNISH_DECAY - EPSILON_START_DECAY);
+
+    let total = 0;
+    let start_counting_total = 0.8 * epochs;
+    
+    let QAgent = new TabularQ(PLAYER.MACHINE);
+    for (var i = 0; i < epochs; i++) {
+        // debugger;
+        QAgent.reset();
+        let board = new TicTacToeBoard();
+        let whoseTurn = round(random(0, 1));
+
+        while (board.checkWin() == "") {
+            if (whoseTurn == PLAYER.HUMAN) {
+                board.makeRandomMove(PLAYER.HUMAN);
+            } else {
+                let action = null;
+                if (random() < epsilon) {
+                    action = QAgent.getNextAction(board, useRandom=true);
+                } else {
+                    action = QAgent.getNextAction(board, useRandom=false);
+                }
+
+                board.makeMove(new GameMove(PLAYER.MACHINE, action.action));
+            }
+            
+            whoseTurn = (whoseTurn == PLAYER.HUMAN) ? PLAYER.MACHINE : PLAYER.HUMAN;
+        }
+
+        if (i >= EPSILON_START_DECAY && i <= EPSILON_FNISH_DECAY) {
+            epsilon -= epsilon_decay_value;
+        }
+
+        // debugger;
+        QAgent.learnGameOver(board, epsilon);
+
+        results[board.checkWin()] = (results[board.checkWin()] != undefined) ? 
+            (results[board.checkWin()] + 1) : 0;
+
+        if (i % 100 == 0) { 
+            print(results);
+            results = {};
+        }
+
+        if (i > start_counting_total) {
+            switch (board.checkWin()) {
+                case "m": total += 1; break;
+                case "h": total -= 1; break;
+            }
+        }
+    }
+
+    print("-- end:");
+    print(results);
+    print(total / (epochs - start_counting_total));
+}
+
+function trainTabularQ12() {
+    let results = {};
+    let epochs = 10000;
+
+    let total = 0;
+    
+    let QAgent1 = new TabularQ(PLAYER.MACHINE);
+    let QAgent2 = new TabularQ(PLAYER.HUMAN);
+    for (var i = 0; i < epochs; i++) {
+        // debugger;
+        QAgent1.reset();
+        QAgent2.reset();
+        let board = new TicTacToeBoard();
+        let whoseTurn = round(random(0, 1));
+
+        while (board.checkWin() == "") {
+            if (whoseTurn == PLAYER.MACHINE) {
+                let action = QAgent1.getNextAction(board);
+                board.makeMove(new GameMove(PLAYER.MACHINE, action.action));
+            } else {
+                let action = QAgent2.getNextAction(board);
+                board.makeMove(new GameMove(PLAYER.HUMAN, action.action));
+            }
+            
+            whoseTurn = (whoseTurn == PLAYER.HUMAN) ? PLAYER.MACHINE : PLAYER.HUMAN;
+        }
+
+        // debugger;
+        QAgent1.learnGameOver(board);
+        QAgent2.learnGameOver(board);
+
+        results[board.checkWin()] = (results[board.checkWin()] != undefined) ? 
+            (results[board.checkWin()] + 1) : 0;
+
+        if (i % 100 == 0) { 
+            print(results);
+            total += (results["m"] != undefined) ? results["m"] : 0;
+            results = {};
+        }
+    }
+
+    print("-- end:");
+    print(results);
+    print(total / epochs);
+    debugger;
 }
