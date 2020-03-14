@@ -17,11 +17,12 @@ function getNewAgentPosition() {
 }
 
 function calculateFitness(list) {
-    var scores = list.map((f) => f.score);
-    var min = scores.reduce((a, b) => a < b ? a : b);
-    scores = scores.map((f) => f - min);
+    var min = list.reduce((a, b) => a < b ? a : b);
 
-    var fitnesses = scores.map((f) => pow(f, 1));
+    list = list.map((f) => f - min);
+    list = list.map((f) => f + 0.1);
+
+    var fitnesses = list.map((f) => pow(f, 1));
     var sum = fitnesses.reduce((a, b) => a + b);
     var means = fitnesses.map((f) => f / sum);
     return means;

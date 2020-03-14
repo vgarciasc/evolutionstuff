@@ -49,7 +49,6 @@ class Agent extends GridElement {
 
         let fovInput = this.getAdjacents(this.fov);
         fovInput = fovInput.map(this.codify);
-        console.log('fovInput :', fovInput);
 
         input = input.concat(fovInput);
         
@@ -58,6 +57,8 @@ class Agent extends GridElement {
     
     act(netOutput) {
         let a = argmax(netOutput);
+        // let arr = (new Array(netOutput.length)).fill(0).map((f, i) => i);
+        // let a = pickFit(netOutput, arr);
         switch (a) {
             case 0: this.move(DIRECTION.UP);    break;
             case 1: this.move(DIRECTION.DOWN);  break;
@@ -117,9 +118,9 @@ class Agent extends GridElement {
                 let elem = GRID.elementAt(tile);
                 let elemName = elem ? GRID.elementAt(tile).getName() : undefined;
                 
-                if (!GRID.isTileValid(tile)) {
-                    elemName = "Wall";
-                }
+                // if (!GRID.isTileValid(tile)) {
+                //     elemName = "Wall";
+                // }
 
                 output[(j + d) * (d * 2 + 1) + (i + d)] = elemName;
             }
