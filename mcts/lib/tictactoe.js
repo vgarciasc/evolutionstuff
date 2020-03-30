@@ -16,7 +16,7 @@ class TicTacToeBoard {
 
     makeRandomMove(player) {
         let legalMoves = this.getLegalPositions();
-        let randomMove = round(random(legalMoves.length - 1));
+        let randomMove = myp5.round(myp5.random(legalMoves.length - 1));
         let position = legalMoves[randomMove];
         this.makeMove(new GameMove(player, position));
     }
@@ -82,6 +82,10 @@ class GameMove {
     constructor(player, position) {
         this.player = player;
         this.position = position;
+    }
+
+    copy() {
+        return new GameMove(this.player, this.position);
     }
 }
 
