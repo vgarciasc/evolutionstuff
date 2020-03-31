@@ -308,18 +308,16 @@ let myp5 = new p5(s, "canvascontainer");
 
 function testMCTS() {
     let results = {"h": 0, "m": 0, "v": 0};
-    for (var i = 0; i < 2; i++) {
+    for (var i = 0; i < 100; i++) {
         let board = new TicTacToeBoard();
         
         let player = myp5.int(myp5.random(2)) % 2 == 1 ? PLAYER.MACHINE : PLAYER.HUMAN;
         while (board.checkWin() == "") {
             if (player == PLAYER.MACHINE) {
-                let mcts_model = new MCTS(board.copy());
-                let mcts_search = mcts_model.runSearch(2);
+                let mcts_model = new MCTS(board.copy(), player);
+                let mcts_search = mcts_model.runSearch(0.4);
 
-                let move = mcts_search.move;
-                move.player = player;
-                board.makeMove(move);
+                board.makeMove(mcts_search.move);
             } else {
                 board.makeRandomMove(player);
             }
@@ -334,18 +332,4 @@ function testMCTS() {
     }
 
     console.log(results);
-
-
-    // sketch.machineRandomMove = () => {
-    //     TTT_BOARD.makeRandomMove(PLAYER.MACHINE);
-    //     sketch.endMove(PLAYER.MACHINE);
-    // }
-
-    // sketch.machineMctsMove = () => {
-    //     let monteCarlo = new MCTS(TTT_BOARD.copy());
-    //     let MCTS_search = monteCarlo.runSearch(mctsTimeoutSlider.value());
-    //     TTT_BOARD.makeMove(MCTS_search.move);
-    //     sketch.endMove(PLAYER.MACHINE);
-    //     setMCTS(monteCarlo, MCTS_search);
-    // }
 }

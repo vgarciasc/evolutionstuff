@@ -80,13 +80,6 @@ class MCTS {
         if (model.checkWin() == "") {
             let legalPositions = this.getAvailablePlays(node, model);
             let randomPos = legalPositions[myp5.round(myp5.random(legalPositions.length - 1))];
-            
-            // let otherPlayer = null;
-            // if (node.isRoot()) { 
-            //     otherPlayer = PLAYER.MACHINE;
-            // } else { 
-            //     otherPlayer = (node.move.player == PLAYER.HUMAN) ? PLAYER.MACHINE : PLAYER.HUMAN;
-            // }
 
             let otherPlayer = getOtherPlayer(node.data.move.player);
             
@@ -97,14 +90,6 @@ class MCTS {
             this.tree.insert(expandedNode, node);
 
             actions = [new AlgAction("expansion", expandedNode.id, null, null)];
-
-            // let nodeIndex = this.nodeList.indexOf(node);
-            
-            // let newChild = new GameNode(node, randomMove);
-            // newChild.id = this.nodeList.length;
-
-            // this.nodeList.push(newChild);
-            // this.nodeList[nodeIndex].children.push(newChild);
         } else {
             expandedNode = node;
         }
@@ -149,7 +134,7 @@ class MCTS {
             }
             if ((node.data.move.player == PLAYER.MACHINE && winner == "h") ||
                 (node.data.move.player == PLAYER.HUMAN   && winner == "m")) {
-                node.data.value -= 1;
+                node.data.value -= 2;
             }
         
             actions.concat(this.backpropagate(this.tree.getParent(node), winner));

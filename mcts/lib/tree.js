@@ -23,7 +23,13 @@ class Tree {
 	}
 
 	getChildren(node) {
+		if (!node) return [];
+		//todo
 		return this.nodes.filter((f) => node.children.indexOf(f.id) != -1);
+	}
+
+	getSiblings(node) {
+		return this.getChildren(this.getParent(node));
 	}
 
 	copy() {
@@ -31,7 +37,9 @@ class Tree {
 		for (var i = 0; i < this.nodes.length; i++) {
 			arr.push(this.nodes[i].copy());
 		}
-		return arr;
+		let new_tree = new Tree(arr[0]);
+		new_tree.nodes = arr.slice();
+		return new_tree;
 	}
 }
 
