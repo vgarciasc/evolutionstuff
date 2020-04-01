@@ -10,8 +10,9 @@ class Tree {
 
 	insert(node, parent) {
 		node.id = this.nodes.length;
+		node.parent_id = parent.id;
 		this.nodes.push(node);
-		this.nodes[parent.id].children.push(node.id);
+		this.nodes[node.parent_id].children_id.push(node.id);
 	}
 
 	update(node, new_data) {
@@ -19,13 +20,16 @@ class Tree {
 	}
 
 	getParent(node) {
-		return this.nodes.find((f) => f.children.indexOf(node.id) != -1);
+		return this.nodes[node.parent_id];
 	}
 
 	getChildren(node) {
 		if (!node) return [];
-		//todo
-		return this.nodes.filter((f) => node.children.indexOf(f.id) != -1);
+		let arr = [];
+		for (var i = 0; i < node.children_id.length; i++) {
+			arr.push(this.nodes[node.children_id[i]]);
+		}
+		return arr;
 	}
 
 	getSiblings(node) {
@@ -44,18 +48,23 @@ class Tree {
 }
 
 class Node {
-	constructor (data, id=-1, children=[]) {
+	constructor (data, id=-1, children_id=[], parent_id=-1) {
 		this.data = data;
 		this.id = id;
-		this.children = children;
+		this.children_id = children_id;
+		this.parent_id = parent_id;
 	}
 
 	copy() {
-		return new Node(this.data, this.id, this.children.slice());
+		return new Node(this.data, this.id, this.children_id.slice(), this.parent_id);
 	}
 
+    hasNChildren(n) {
+    	return this.children_id.length == n;
+    }
+
     isLeaf() {
-        return this.children.length == 0;
+        return this.hasNChildren(0);
     }
 
     isRoot() {
