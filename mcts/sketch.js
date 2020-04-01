@@ -26,8 +26,8 @@ var currentGameState;
 
 const s = (sketch) => {
   sketch.setup = () => {
-    canvas = sketch.createCanvas(100, 100);
-    tileSize = sketch.width/3;
+    canvas = sketch.createCanvas(200, 200);
+    tileSize = (sketch.width - 20)/3;
 
     whoseTurnSpan = sketch.select("#whoseturn");
     machineControlsArea = sketch.select("#machine_controls_area");
@@ -55,8 +55,7 @@ const s = (sketch) => {
   }
 
   sketch.drawBoard = () => {
-        sketch.stroke(0);
-        sketch.strokeWeight(1);
+        sketch.translate(10, 10);
 
         for (var i = 0; i < 3; i++) {
             for (var j = 0; j < 3; j++) {

@@ -1,50 +1,71 @@
 //Heavily based on https://rachel53461.wordpress.com/2014/04/20/algorithm-for-drawing-trees/
 
-var canvas;
-var my_tree;
+// var canvas;
+// var my_tree;
 
-var node_size = {x: 50, y: 50};
+// function setup() {
+//     canvas = createCanvas(800, 600);
+// 	textAlign(CENTER, CENTER);
 
-function setup() {
-    canvas = createCanvas(800, 600);
-	textAlign(CENTER, CENTER);
+//     // let root = new Node({name: "O_0"});
+//     // my_tree = new Tree(root);
+//     // my_tree.insert(new Node({name: "E_1"}), my_tree.get(0));
+//     // my_tree.insert(new Node({name: "A_2"}), my_tree.get(1));
+//     // my_tree.insert(new Node({name: "D_3"}), my_tree.get(1));
+//     // my_tree.insert(new Node({name: "B_4"}), my_tree.get(3));
+//     // my_tree.insert(new Node({name: "C_5"}), my_tree.get(3));
+//     // my_tree.insert(new Node({name: "F_6"}), my_tree.get(0));
+//     // my_tree.insert(new Node({name: "N_7"}), my_tree.get(0));
+//     // my_tree.insert(new Node({name: "G_8"}), my_tree.get(7));
+//     // my_tree.insert(new Node({name: "M_9"}), my_tree.get(7));
+//     // my_tree.insert(new Node({name: "H_10"}), my_tree.get(9));
+//     // my_tree.insert(new Node({name: "I_11"}), my_tree.get(9));
+//     // my_tree.insert(new Node({name: "J_12"}), my_tree.get(9));
+//     // my_tree.insert(new Node({name: "K_13"}), my_tree.get(9));
+//     // my_tree.insert(new Node({name: "L_14"}), my_tree.get(9));
 
-    let root = new Node({name: "O_0"});
-    my_tree = new Tree(root);
-    my_tree.insert(new Node({name: "E_1"}), my_tree.get(0));
-    my_tree.insert(new Node({name: "A_2"}), my_tree.get(1));
-    my_tree.insert(new Node({name: "D_3"}), my_tree.get(1));
-    my_tree.insert(new Node({name: "B_4"}), my_tree.get(3));
-    my_tree.insert(new Node({name: "C_5"}), my_tree.get(3));
-    my_tree.insert(new Node({name: "F_6"}), my_tree.get(0));
-    my_tree.insert(new Node({name: "N_7"}), my_tree.get(2));
-    my_tree.insert(new Node({name: "G_8"}), my_tree.get(7));
-    my_tree.insert(new Node({name: "M_9"}), my_tree.get(7));
-    my_tree.insert(new Node({name: "H_10"}), my_tree.get(9));
-    my_tree.insert(new Node({name: "I_11"}), my_tree.get(9));
-    my_tree.insert(new Node({name: "J_12"}), my_tree.get(9));
-    my_tree.insert(new Node({name: "K_13"}), my_tree.get(9));
-    my_tree.insert(new Node({name: "L_14"}), my_tree.get(9));
+//     let root = new Node({name: "O_0"});
+//     my_tree = new Tree(root);
+//     my_tree.insert(new Node({name: "A_1"}), my_tree.get(0));
+//     my_tree.insert(new Node({name: "B_2"}), my_tree.get(0));
+//     my_tree.insert(new Node({name: "C_3"}), my_tree.get(0));
+//     my_tree.insert(new Node({name: "D_4"}), my_tree.get(0));
+//     my_tree.insert(new Node({name: "E_5"}), my_tree.get(0));
+//     my_tree.insert(new Node({name: "F_6"}), my_tree.get(0));
+//     my_tree.insert(new Node({name: "I_7"}), my_tree.get(0));
+//     my_tree.insert(new Node({name: "J_8"}), my_tree.get(2));
+//     my_tree.insert(new Node({name: "K_9"}), my_tree.get(3));
+//     my_tree.insert(new Node({name: "L_10"}), my_tree.get(3));
+//     my_tree.insert(new Node({name: "M_11"}), my_tree.get(4));
+//     my_tree.insert(new Node({name: "N_12"}), my_tree.get(4));
+//     my_tree.insert(new Node({name: "O_13"}), my_tree.get(4));
+//     my_tree.insert(new Node({name: "P_14"}), my_tree.get(6));
+//     my_tree.insert(new Node({name: "Q_15"}), my_tree.get(6));
 
-    prepareTree(my_tree);
-}
+//     prepareTree(my_tree);
+// }
 
-function draw() {
-	stroke(0);
+// function draw() {
+// 	stroke(0);
 
-	postorder_draw(my_tree, my_tree.get(0));
-}
+// 	postorder_draw(my_tree, my_tree.get(0), {x: 50, y: 50}, (node, node_size) => {
+// 		rect(0, 0, node_size.x, node_size.y); 
+// 		text(node.data.name, node_size.x / 2, node_size.y / 2);
+// 	});
+// }
 
-function prepareTree(tree) {
+function prepareTree(tree, configs) {
 	tree.get(0).data.y = 0;
 
 	//first traversal
-	calculateInitialValues(tree, tree.get(0));
-	checkAllChildrenOnScreen(tree, tree.get(0));
-	calculateFinalValues(tree, tree.get(0), 0);
+	calculateInitialValues(tree, tree.get(0), 0, configs);
+	// checkAllChildrenOnScreen(tree, tree.get(0));
+	calculateFinalValues(tree, tree.get(0), 0, configs);
+
+	return tree;
 }
 
-function calculateInitialValues(tree, node, sibling_idx = 0) {
+function calculateInitialValues(tree, node, sibling_idx = 0, configs) {
 	let parent = tree.getParent(node);
 	let children = tree.getChildren(node);
 
@@ -53,7 +74,7 @@ function calculateInitialValues(tree, node, sibling_idx = 0) {
 
 		child.data.y = node.data.y + 1;
 
-		calculateInitialValues(tree, child, i);
+		calculateInitialValues(tree, child, i, configs);
 	}
 
 	node.data.final_x = 0;
@@ -72,7 +93,7 @@ function calculateInitialValues(tree, node, sibling_idx = 0) {
 			node.data.x = children[0].data.x;
 		}
 		else {
-			node.data.x = tree.getSiblings(node)[sibling_idx - 1].data.x + sibling_idx;
+			node.data.x = tree.getSiblings(node)[sibling_idx - 1].data.x + 1;
 			node.data.mod = node.data.x - children[0].data.x;
 		}
 	}
@@ -84,50 +105,54 @@ function calculateInitialValues(tree, node, sibling_idx = 0) {
 		if (sibling_idx == 0) {
 			node.data.x = mid;
 		} else {
-			node.data.x = tree.getSiblings(node)[sibling_idx - 1].data.x + sibling_idx;
+			node.data.x = tree.getSiblings(node)[sibling_idx - 1].data.x + 1;
 			node.data.mod = node.data.x - mid;
 		}
 	}
 
-	fixConflicts(tree, node, sibling_idx);
+	fixConflicts(tree, node, sibling_idx, configs);
 }
 	
-function calculateFinalValues(tree, node, mod_sum) {
+function calculateFinalValues(tree, node, mod_sum, configs) {
 	node.data.final_x = node.data.x + mod_sum;
 
 	let children = tree.getChildren(node);
 	for (var i = 0; i < children.length; i++) {
-		calculateFinalValues(tree, children[i], node.data.mod + mod_sum);
+		calculateFinalValues(tree, children[i], node.data.mod + mod_sum, configs);
 	}
 }
 
-function fixConflicts(tree, node, sibling_idx = 0) {
-	let min_distance = 1;
+function fixConflicts(tree, node, sibling_idx = 0, configs = {min_distance: 1}) {
+	let min_distance = configs.min_distance;
 
 	let children = tree.getChildren(node);
 	let shift_value = 0;
 
-	let node_contour = {};
-	node_contour = getLeftContour(tree, node, 0, node_contour);
+	let node_contour = getLeftContour(tree, node, 0, {});
+	let node_contour_lvls = Object.keys(node_contour).map((f) => parseInt(f));
+	let node_contour_max_lvl = Math.max.apply(Math, node_contour_lvls);
 
 	let siblings = tree.getSiblings(node);
 
 	for (var i = 0; i < sibling_idx; i++) {
 		let sibling = siblings[i];
-		
-		let sibling_contour = {};
-		sibling_contour = getRightContour(tree, sibling, 0, sibling_contour);
 
-		for (var lvl = node.data.y; lvl <= min(max(Object.keys(sibling_contour), Object.keys(node_contour))); lvl++) {
+		let sibling_contour = getRightContour(tree, sibling, 0, {});
+		let sibling_contour_lvls = Object.keys(sibling_contour).map((f) => parseInt(f));
+		let sibling_contour_max_lvl = Math.max.apply(Math, sibling_contour_lvls);
+
+		// if (node.id == 6) debugger;
+
+		for (var lvl = node.data.y; lvl <= Math.min(node_contour_max_lvl, sibling_contour_max_lvl); lvl++) {
 			let distance = node_contour[lvl] - sibling_contour[lvl];
 			if (distance + shift_value < min_distance) {
-				shift_value = max(min_distance - distance, shift_value);
+				shift_value = Math.max(min_distance - distance, shift_value);
 			}
 		}
 
-		if (shift_value > 0) {
-			centerNodesBetween(tree, sibling, i, node, sibling_idx, siblings, shift_value);
-		}
+		// if (shift_value > 0) {
+		// 	centerNodesBetween(tree, sibling, i, node, sibling_idx, siblings, shift_value);
+		// }
 	}
 
 	if (shift_value > 0) {
@@ -180,7 +205,7 @@ function getLeftContour(tree, node, mod_sum, contours) {
 	if (contours[node.data.y] == null) {
 		contours[node.data.y] = node.data.x + mod_sum;
 	} else {
-		contours[node.data.y] = min(contours[node.data.y], node.data.x + mod_sum);
+		contours[node.data.y] = Math.min(contours[node.data.y], node.data.x + mod_sum);
 	}
 
 	mod_sum += node.data.mod;
@@ -197,7 +222,7 @@ function getRightContour(tree, node, mod_sum, contours) {
 	if (contours[node.data.y] == null) {
 		contours[node.data.y] = node.data.x + mod_sum;
 	} else {
-		contours[node.data.y] = max(contours[node.data.y], node.data.x + mod_sum);
+		contours[node.data.y] = Math.max(contours[node.data.y], node.data.x + mod_sum);
 	}
 
 	mod_sum += node.data.mod;
@@ -210,19 +235,21 @@ function getRightContour(tree, node, mod_sum, contours) {
 	return contours;
 }
 
-function postorder_draw(tree, node) {
+function postorder_draw(tree, node, node_size, render_func) {
 	let children = tree.getChildren(node);
 	for (var i = 0; i < children.length; i++) {
 		let child = children[i];
-		postorder_draw(tree, child);
+		postorder_draw(tree, child, node_size, render_func);
 	}
 
 	push();
 	translate(
 		node.data.final_x * 2 * node_size.x,
 		node.data.y * 2 * node_size.y);
-	rect(0, 0, node_size.x, node_size.y); 
-	text(node.data.name, node_size.x / 2, node_size.y / 2);
+	// rect(0, 0, node_size.x, node_size.y); 
+	// text(node.data.name, node_size.x / 2, node_size.y / 2);
+
+	render_func(node, node_size);
 
 	//drawing edges
 	line(node_size.x / 2, 0, node_size.x / 2, - node_size.y/2);
