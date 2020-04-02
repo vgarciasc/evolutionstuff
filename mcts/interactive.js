@@ -11,8 +11,15 @@ let final_tree = undefined;
 let draw_tree = undefined;
 let initial_board = undefined;
 let action_trace = [];
+let best_move = null;
 
 let currentActionIdx = -1;
+
+function setupInteractive() {
+  document.getElementById("btn_next").addEventListener("click", clickNext);
+  document.getElementById("btn_finish").addEventListener("click", clickFinish);
+  document.getElementById("btn_make_play").addEventListener("click", clickMakePlay);
+}
 
 function setMCTS(mcts_obj, trace) {
   currentActionIdx = -1;
@@ -21,6 +28,7 @@ function setMCTS(mcts_obj, trace) {
   draw_tree = new Tree(new Node(new GameNode(null)));
   initial_board = mcts_obj.model.copy();
   action_trace = trace.trace;
+  best_move = trace.move;
 
   tree_vis_p5.initial_board = initial_board;
 
@@ -48,6 +56,7 @@ function applyAction(action) {
       let parent = draw_tree.get(final_tree.getParent(final_tree.get(action.node_id)).id);
       draw_tree.insert(new Node(new GameNode(final_tree.get(action.node_id).data.move)), parent);
       draw_tree.get(action.node_id).data.expanded = true;
+      draw_tree.get(action.node_id).data.collapsed = false;
       break;
     case "simulation":
       let simulated_node = new Node(new GameNode(draw_tree.get(action.node_id).data.move.copy()));
@@ -67,26 +76,43 @@ function applyAction(action) {
   }
 }
 
-function sendUpdateDrawTree() {
-  tree_vis_p5.currentAction = action_trace[currentActionIdx];
-  tree_vis_p5.updateTree(prepareTree(draw_tree.copy(), {min_distance: 0.5}));
+function sendUpdateDrawTree(tree) {
+  let action_kind = "---";
+  let progress_bar = "(0/0)";
+
+  if (action_trace.length > 0 && currentActionIdx >= -1 && currentActionIdx < action_trace.length) {
+    action_kind = action_trace[currentActionIdx].kind;
+    progress_bar = "(" + currentActionIdx + "/" + (action_trace.length - 1) + ")";
+  }
+
+  document.getElementById("current_action_kind").innerHTML = action_kind;
+  document.getElementById("current_action_kind").className = action_kind;
+  document.getElementById("current_action_count").innerHTML = progress_bar;
+  tree_vis_p5.updateTree(tree);
 }
 
 // CONTROL
 
-function clickRunMcts() {
-}
-
 function clickNext() {
-  for (var i = 0; i < 1; i++) {
-    currentActionIdx += 1;
-    applyAction(action_trace[currentActionIdx]);
-    sendUpdateDrawTree();
-  }
+  currentActionIdx += 1;
+  applyAction(action_trace[currentActionIdx]);
+  let tree = prepareTree(draw_tree.copy(), {min_distance: 1});
+  sendUpdateDrawTree(tree);
 }
 
-function unpause() {
+function clickFinish() {
+  currentActionIdx = action_trace.length - 1;
+  draw_tree = final_tree.copy();
+  let tree = prepareTree(draw_tree.copy(), {min_distance: 1});
+  tree.nodes.forEach((f) => { if (!f.isRoot()) f.data.collapsed = true });
+  sendUpdateDrawTree(tree);
+
+  tree_vis_p5.focusNode(tree_vis_p5.tree.getRoot());
 }
 
-function clickPlay() {
+function clickMakePlay() {
+  myp5.makeMove(best_move);
+  currentActionIdx = -1;
+  action_trace = [];
+  sendUpdateDrawTree(null);
 }

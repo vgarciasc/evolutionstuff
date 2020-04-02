@@ -45,7 +45,7 @@ class MCTS {
 
         var i = 0;
         while (Date.now() < end) {
-        // for (var i = 0; i < 5000; i++) {
+        // for (var i = 0; i < 50; i++) {
             let iterationTrace = this.runSearchIteration();
             trace = trace.concat(iterationTrace);
         }

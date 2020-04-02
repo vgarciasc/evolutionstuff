@@ -1,7 +1,6 @@
 const vis = (s) => {
   let tree = null;
   let initial_board = null;
-  let currentAction = null;
 
   let zoom = 1.00;
   let zMin = 0.05;
@@ -10,16 +9,18 @@ const vis = (s) => {
   let offset = {"x": 20, "y": 20};
   let dragging = false;
   let lastMouse = {"x": 0, "y": 0};
+  let hovered_node_id = -1;
 
-  let node_size = {x: 50, y: 70};
+  let node_size = {x: 50, y: 80};
 
   s.setup = () => {
     s.textFont("Courier");
-    // s.textStyle(s.NORMAL);
     s.createCanvas(800, 500);
   };
 
   s.draw = () => {
+    s.handleHover();
+
     s.background(255);
 
     s.push();
@@ -32,12 +33,6 @@ const vis = (s) => {
     }
 
     s.pop();
-
-    if (s.currentAction) {
-      s.toggleActionColors(s.currentAction.kind);
-      s.textAlign(s.LEFT, s.TOP);
-      s.text(s.currentAction.kind, 0, 0);
-    }
   };
 
   s.updateTree = (tree) => {
@@ -46,14 +41,16 @@ const vis = (s) => {
 
   s.postorder_draw_tree = (node, model) => {
   	let children = s.tree.getChildren(node);
-  	for (var i = 0; i < children.length; i++) {
-  		let child = children[i];
+    if (!node.data.collapsed) {
+    	for (var i = 0; i < children.length; i++) {
+    		let child = children[i];
 
-  		let child_model = model.copy();
-  		child_model.makeMove(child.data.move);
+    		let child_model = model.copy();
+    		child_model.makeMove(child.data.move);
 
-  		s.postorder_draw_tree(child, child_model);
-  	}
+    		s.postorder_draw_tree(child, child_model);
+    	}
+    }
 
   	s.push();
   	s.translate(node.data.final_x * 2 * node_size.x,
@@ -81,12 +78,20 @@ const vis = (s) => {
 
   	if (children.length > 0) {
   		s.line(node_size.x / 2, node_size.y, node_size.x / 2, node_size.y * 1.5);
-  	}
+
+      s.fill(0);
+      s.circle(node_size.x / 2, node_size.y, node_size.x / 4);
+      s.fill(255);
+      s.textAlign(s.CENTER, s.CENTER);
+      s.strokeWeight(0);
+      s.text(node.data.collapsed ? "+" : "-", node_size.x / 2, node_size.y + 1);
+    }
+
   	s.pop();
 
     s.toggleActionColors(null);
   	//drawing edges
-  	if (children.length > 0) {
+  	if (children.length > 0 && !node.data.collapsed) {
   		s.line((children[0].data.final_x * 2 + 1/2) * node_size.x,
   			   (2 * node.data.y + 3/2) * node_size.y,
   			   (children[children.length - 1].data.final_x * 2+ 1/2) * node_size.x,
@@ -101,7 +106,12 @@ const vis = (s) => {
 
     let tile_size = node_size.x / 3;
 
-    s.fill(255);
+    if (node.id == hovered_node_id) {
+      s.fill(200);
+    } else {
+      s.fill(255);
+    }
+
     s.rect(0, 0, node_size.x, node_size.y);
 
     for (var j = 0; j < 3; j++) {
@@ -137,11 +147,22 @@ const vis = (s) => {
     }
     
     s.push();
-    s.textAlign(s.CENTER, s.TOP);
     s.textSize(tile_size * 0.5);
+
     s.translate(0, (node_size.y - node_size.x) / 10);
-    s.text("va:" + value, node_size.x/2, node_size.x);
-    s.text("vi:" + visits, node_size.x/2, node_size.x + (node_size.y - node_size.x) / 2);
+    
+    if (!node.isRoot()) {
+      s.textAlign(s.LEFT, s.TOP);
+      s.text(" va:", 0, node_size.x);
+      s.text(" vi:", 0, node_size.x + (node_size.y - node_size.x) / 3);
+      s.textAlign(s.RIGHT, s.TOP);
+      s.text(value + " ", node_size.x, node_size.x);
+      s.text(visits + " ", node_size.x, node_size.x + (node_size.y - node_size.x) / 3);
+    } else {
+      s.textAlign(s.CENTER, s.BOTTOM);
+      s.text("root", node_size.x / 2, (node_size.y - node_size.x) / 2 + node_size.x);
+    }
+    
     s.pop();
 
     if (node.data.simulated_board) {
@@ -194,10 +215,27 @@ const vis = (s) => {
     } 
   }
 
+  s.focusNode = (node) => {
+    offset.x = - node.data.final_x * 2 * node_size.x + s.width / 2;
+    offset.y = - node.data.y       * 2 * node_size.y + s.height / 4;
+    zoom = 1;
+  }
+
+  s.toggleCollapse = (node) => {
+    node.data.collapsed = !node.data.collapsed;
+  }
+
   s.mousePressed = () => {
     dragging = true;
     lastMouse.x = s.mouseX;
     lastMouse.y = s.mouseY;
+
+    if (hovered_node_id != -1) {
+      let pressed_node = s.tree.get(hovered_node_id);
+      if (!pressed_node.isLeaf()) {
+        s.toggleCollapse(pressed_node);  
+      } 
+    }
   }
 
   s.mouseDragged = () => {
@@ -217,6 +255,29 @@ const vis = (s) => {
     zoom += sensitivity * event.delta;
     zoom = s.constrain(zoom, zMin, zMax);
     return false;
+  }
+
+  s.handleHover = () => {
+    if (s.mouseX > 0 && s.mouseY > 0 && s.mouseX < s.width && s.mouseY < s.height && s.tree) {
+      for (var i = 0; i < s.tree.nodes.length; i++) {
+        let node = s.tree.nodes[i];
+        let bounds = {
+          x_min:  (node.data.final_x * 2 * node_size.x) * zoom + offset.x,
+          y_min:  (node.data.y       * 2 * node_size.y) * zoom + offset.y,
+          width:  node_size.x * zoom,
+          height: node_size.y * zoom      
+        };
+
+        if (s.mouseX > bounds.x_min && s.mouseY > bounds.y_min 
+          && s.mouseX < (bounds.x_min + bounds.width) 
+          && s.mouseY < (bounds.y_min + bounds.height)) {
+          hovered_node_id = node.id;
+          return;
+        }
+      }
+    }
+
+    hovered_node_id = -1;
   }
 };
 

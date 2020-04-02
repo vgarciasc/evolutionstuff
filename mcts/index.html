@@ -16,8 +16,14 @@
         <script>document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')</script>
         <!-- <script src="./sketch.js"></script> -->
         <!-- <script src="./lib/nn.js"></script> -->
+        <style>
+            .selection       { color: rgb(180, 30,  30); }
+            .expansion       { color: rgb(30, 180,  30); }
+            .simulation      { color: rgb(30, 180, 180); }
+            .backpropagation { color: rgb(30,  30, 180); }
+        </style>
     </head>
-    <body>
+    <body onLoad="setupInteractive()">
         <h1>MCTS Tic-tac-toe (<i>Monte Carlo Tree Search</i>)</h1>
         <div style="width: auto; float: left; border: solid 1px black; padding: 1em;">
             <div id="canvascontainer"></div>
@@ -46,7 +52,7 @@
                 </div>
             </div>
             <div id="game_over_area">
-                <b>The winner is</b> <span id="game_over_winner">HUMAN</span>!
+                <b>The winner is...</b> <span id="game_over_winner">HUMAN</span>!
                 <br>
                 <center>
                     <button onclick="myp5.reset()">Restart game</button>
@@ -54,9 +60,24 @@
             </div>
         </div>
         <div style="width: auto; margin-left: 2em; float: left; border: solid 1px black">
-            <button onclick="clickRunMcts()" disabled>run mcts</button>
-            <button onclick="clickNext()">next</button>
-            <button onclick="clickPlay()" disabled>play</button>
+            <div style="border: solid 1px lightgrey; height: 50px">
+                <div style="float: left;">
+                    <div>
+                        <button style="width: 200px;" id="btn_make_play">make play</button>
+                    </div>
+                    <div>
+                        <button style="float: left; width: 100px;" id="btn_next">next &gt;</button>
+                        <button style="float: left; width: 100px;" id="btn_finish">finish &gt;&gt;</button>
+                    </div>
+                </div>
+                <div style="float: left; height: 100%; padding: 0.25em">
+                    <b>Current action</b>:
+                    <br>
+                    <span id="current_action_kind">---</span>
+                    <br>
+                    <span id="current_action_count">(0/0)</span>
+                </div>
+            </div>
             <div id="tree_vis"></div>
         </div>
     </body>

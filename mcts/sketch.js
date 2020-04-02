@@ -162,7 +162,7 @@ const s = (sketch) => {
     sketch.machineMctsMove = () => {
         let monteCarlo = new MCTS(TTT_BOARD.copy(), PLAYER.MACHINE);
         let MCTS_search = monteCarlo.runSearch(mctsTimeoutSlider.value());
-        TTT_BOARD.makeMove(MCTS_search.move);
+        // TTT_BOARD.makeMove(MCTS_search.move);
         sketch.endMove(PLAYER.MACHINE);
         setMCTS(monteCarlo, MCTS_search);
     }
@@ -184,11 +184,8 @@ const s = (sketch) => {
         }
     }
 
-    sketch.makeMove = (pos) => {
-        TTT_BOARD.humanMakeMove(pos);
-        TTT_BOARD.print();
-        sketch.machineMctsMove();
-        TTT_BOARD.print();
+    sketch.makeMove = (move) => {
+        TTT_BOARD.makeMove(move);
     }
 
     sketch.trainTabularQ = () => {
