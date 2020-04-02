@@ -10,6 +10,7 @@ const vis = (s) => {
   let dragging = false;
   let lastMouse = {"x": 0, "y": 0};
   let hovered_node_id = -1;
+  let hovered_node_pos = {x: 0, y: 0};
 
   let node_size = {x: 50, y: 80};
 
@@ -76,9 +77,11 @@ const vis = (s) => {
       }
     }
 
-  	if (children.length > 0) {
+    if (!node.isLeaf()) {
   		s.line(node_size.x / 2, node_size.y, node_size.x / 2, node_size.y * 1.5);
+    }
 
+  	if (node.data.should_show_collapse_btn) {
       s.fill(0);
       s.circle(node_size.x / 2, node_size.y, node_size.x / 4);
       s.fill(255);
@@ -215,14 +218,15 @@ const vis = (s) => {
     } 
   }
 
-  s.focusNode = (node) => {
-    offset.x = - node.data.final_x * 2 * node_size.x + s.width / 2;
-    offset.y = - node.data.y       * 2 * node_size.y + s.height / 4;
-    zoom = 1;
-  }
+  s.focusNode = (node, onMouse = false) => {
+    let centered = {
+      x: onMouse ? (s.mouseX - hovered_node_pos.x) : (s.width  / 2),
+      y: onMouse ? (s.mouseY - hovered_node_pos.y) : (s.height / 2),
+    };
 
-  s.toggleCollapse = (node) => {
-    node.data.collapsed = !node.data.collapsed;
+    offset.x = - node.data.final_x * 2 * node_size.x + centered.x;
+    offset.y = - node.data.y       * 2 * node_size.y + centered.y;
+    zoom = 1;
   }
 
   s.mousePressed = () => {
@@ -232,9 +236,7 @@ const vis = (s) => {
 
     if (hovered_node_id != -1) {
       let pressed_node = s.tree.get(hovered_node_id);
-      if (!pressed_node.isLeaf()) {
-        s.toggleCollapse(pressed_node);  
-      } 
+      toggleCollapse(pressed_node);  
     }
   }
 
@@ -272,12 +274,16 @@ const vis = (s) => {
           && s.mouseX < (bounds.x_min + bounds.width) 
           && s.mouseY < (bounds.y_min + bounds.height)) {
           hovered_node_id = node.id;
+          hovered_node_pos = {
+            x: s.mouseX - bounds.x_min,
+            y: s.mouseY - bounds.y_min};
           return;
         }
       }
     }
 
     hovered_node_id = -1;
+    hovered_node_pos = {x: 0, y: 0};
   }
 };
 

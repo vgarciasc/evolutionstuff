@@ -37,6 +37,8 @@ class Tree {
 	remove_rec(node) {
 		let removed = [];
 
+		if (node.isRoot()) return removed;
+
 		let children = this.getChildren(node).slice();
 		for (var i = 0; i < children.length; i++) {
 			if (children[i]) {
@@ -45,6 +47,7 @@ class Tree {
 		}
 
 		let parent_children = this.getParent(node).children_id;
+
 		let index_of_in_parent = parent_children.indexOf(node.id);
 		
 		if (index_of_in_parent == -1) return;
