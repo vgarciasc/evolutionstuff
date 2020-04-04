@@ -10,20 +10,57 @@ function makeGameNode(model, value, visits, children) {
 let initial_board = undefined;
 let action_trace = [];
 let best_move = null;
+
 let currentActionIdx = -1;
+let currentIterationIdx = -1;
+let totalActionsTillNow = 0;
 
 let final_tree = undefined;
 let reconstructed_tree = undefined;
 let draw_tree = undefined;
 
+const VisualizationStates = Object.freeze({ 
+    NONE: 0,
+    VISUALIZING: 1,
+    LAST_STEP: 2
+});
+let current_vis_state = 0;
+
+function transitionToState(new_state) {
+  switch (new_state) {
+    case VisualizationStates.NONE:
+      document.getElementById("btn_next_iteration").disabled = true;
+      document.getElementById("btn_next_action").disabled = true;
+      document.getElementById("btn_last_step").disabled = true;
+      document.getElementById("btn_make_play").disabled = true;
+      break;
+    case VisualizationStates.VISUALIZING:
+      document.getElementById("btn_next_iteration").disabled = false;
+      document.getElementById("btn_next_action").disabled = false;
+      document.getElementById("btn_last_step").disabled = false;
+      document.getElementById("btn_make_play").disabled = false;
+      break;
+    case VisualizationStates.LAST_STEP:
+      document.getElementById("btn_next_iteration").disabled = true;
+      document.getElementById("btn_next_action").disabled = true;
+      document.getElementById("btn_last_step").disabled = true;
+      document.getElementById("btn_make_play").disabled = false;
+      break;
+  }
+
+  current_vis_state = new_state;
+}
+
 function setupInteractive() {
-  document.getElementById("btn_next").addEventListener("click", clickNext);
-  document.getElementById("btn_finish").addEventListener("click", clickFinish);
+  document.getElementById("btn_next_action").addEventListener("click", clickNextAction);
+  document.getElementById("btn_next_iteration").addEventListener("click", clickNextIteration);
+  document.getElementById("btn_last_step").addEventListener("click", clickVisualizeLastStep);
   document.getElementById("btn_make_play").addEventListener("click", clickMakePlay);
 }
 
 function setMCTS(mcts_obj, trace) {
-  currentActionIdx = -1;
+  currentActionIdx = 0;
+  currentIterationIdx = 0;
 
   initial_board = mcts_obj.model.copy();
   action_trace = trace.trace;
@@ -35,36 +72,30 @@ function setMCTS(mcts_obj, trace) {
 
   tree_vis_p5.initial_board = initial_board;
 
-  document.getElementById("btn_next").disabled = false;
-  document.getElementById("btn_finish").disabled = false;
-  document.getElementById("btn_make_play").disabled = false;
+  transitionToState(VisualizationStates.NONE);
+  clickNextAction();
 
-  clickNext();
+  tree_vis_p5.focusNode(tree_vis_p5.tree.getRoot());
 }
 
 function sendDrawTree(tree) {
-  let action_kind = "---";
-  let progress_bar = "(0/0)";
-
-  if (action_trace.length > 0 && currentActionIdx >= -1 && currentActionIdx < action_trace.length) {
-    action_kind = action_trace[currentActionIdx].kind;
-    progress_bar = "(" + currentActionIdx + "/" + (action_trace.length - 1) + ")";
-  }
-
-  document.getElementById("current_action_kind").innerHTML = action_kind;
-  document.getElementById("current_action_kind").className = action_kind;
-  document.getElementById("current_action_count").innerHTML = progress_bar;
+  updateInterface();
   tree_vis_p5.updateTree(tree);
 }
 
-function toggleCollapse(node) {
-  let reconstructed_node = reconstructed_tree.nodes.find((f) => f.data.action_id == node.data.action_id);
-  reconstructed_node.data.collapsed = !reconstructed_node.data.collapsed;
-  
-  draw_tree = makeDrawTree(reconstructed_tree);
-  sendDrawTree(draw_tree);
+function updateInterface() {
+  let action_kind = "---";
+  let action_progress_bar = "(-/-)";
+  let iteration_progress_bar = "(-/-)";
 
-  tree_vis_p5.focusNode(node, true);
+  action_kind = action_trace[currentIterationIdx][currentActionIdx].kind;
+  action_progress_bar = "(" + totalActionsTillNow + "/" + (action_trace.flat().length - 1) + ")";
+  iteration_progress_bar = "(" + currentIterationIdx + "/" + (action_trace.length - 1) + ")";
+
+  document.getElementById("current_action_kind").innerHTML = action_kind;
+  document.getElementById("current_action_kind").className = action_kind;
+  document.getElementById("current_action_count").innerHTML = action_progress_bar;
+  document.getElementById("current_iteration_count").innerHTML = iteration_progress_bar;
 }
 
 function makeDrawTree(tree) {
@@ -107,7 +138,7 @@ function applyAction(action) {
     case "expansion":
       let parent = reconstructed_tree.get(final_tree.getParent(final_tree.get(action.node_id)).id);
       reconstructed_tree.insert(new Node(new GameNode(final_tree.get(action.node_id).data.move)), parent);
-      reconstructed_tree.get(action.node_id).data.action_id = currentActionIdx;
+      reconstructed_tree.get(action.node_id).data.action_id = totalActionsTillNow;
       reconstructed_tree.get(action.node_id).data.expanded = true;
       reconstructed_tree.get(action.node_id).data.collapsed = false;
       break;
@@ -118,44 +149,67 @@ function applyAction(action) {
       reconstructed_tree.insert(simulated_node, reconstructed_tree.get(action.node_id));
       break;
     case "backpropagation":
-      let my_parent = reconstructed_tree.get(action.node_id);
-      while (!my_parent.isRoot()) {
-        my_parent.data.backpropagated = true;
-        my_parent.data.value = action.new_data.new_value;
-        my_parent.data.simulations = action.new_data.new_visits;
-        my_parent = reconstructed_tree.getParent(my_parent);
-      }
+      reconstructed_tree.get(action.node_id).data.backpropagated = true;
+      reconstructed_tree.get(action.node_id).data.value = action.new_data.new_value;
+      reconstructed_tree.get(action.node_id).data.simulations = action.new_data.new_visits;
+      break;
+    case "finish":
+      let best_move_node = reconstructed_tree.get(action.node_id);
+      best_move_node.data.best_move = true;
       break;
   }
 }
 
 // CONTROL
 
-function clickNext() {
-  document.getElementById("btn_next").disabled = (currentActionIdx > action_trace.length - 1);
+function clickNextAction() {
+  if (isLastStep()) {
+    transitionToState(VisualizationStates.LAST_STEP);
+    return;
+  }
 
-  if (currentActionIdx >= action_trace.length) return;
+  if (currentActionIdx == action_trace[currentIterationIdx].length - 1) {
+    currentActionIdx = 0;
+    currentIterationIdx += 1;
+    totalActionsTillNow += 1;
+  } else {
+    currentActionIdx += 1;
+    totalActionsTillNow += 1;
+  }
 
-  currentActionIdx += 1;
-  applyAction(action_trace[currentActionIdx]);
+  let action = action_trace[currentIterationIdx][currentActionIdx];
+  applyAction(action);
 
   draw_tree = makeDrawTree(reconstructed_tree);
   sendDrawTree(draw_tree);
+
+  transitionToState(VisualizationStates.VISUALIZING);
 }
 
-function clickFinish() {
-  for (currentActionIdx + 1; currentActionIdx < action_trace.length - 1; currentActionIdx++) {
-    applyAction(action_trace[currentActionIdx]);
+function clickNextIteration() {
+  if (isLastStep()) {
+    transitionToState(VisualizationStates.LAST_STEP);
+    return;
   }
 
-  document.getElementById("btn_next").disabled = (currentActionIdx > action_trace.length - 2);
-  document.getElementById("btn_finish").disabled = true;
+  let iteration = action_trace[currentIterationIdx];
+  for (var i = 0; i < iteration.length; i++) {
+    clickNextAction();
+  }
+}
+
+function clickVisualizeLastStep() {
+  for (var i = currentIterationIdx; i < action_trace.length; i++) {
+    clickNextIteration();
+  }
 
   draw_tree = makeDrawTree(reconstructed_tree);
 
-  draw_tree.getChildren(draw_tree.getRoot()).forEach((node) => {
+  draw_tree.nodes.forEach((node) => {
     let reconstructed_node = reconstructed_tree.nodes.find((f) => f.data.action_id == node.data.action_id);
-    reconstructed_node.data.collapsed = !reconstructed_node.data.collapsed;
+    if (!reconstructed_node.isRoot()) {
+      reconstructed_node.data.collapsed = true;
+    }
   });
 
   draw_tree = makeDrawTree(reconstructed_tree);
@@ -166,11 +220,29 @@ function clickFinish() {
 
 function clickMakePlay() {
   myp5.makeMove(best_move);
+  myp5.endMove(best_move.player);
   currentActionIdx = -1;
   action_trace = [];
   sendDrawTree(null);
 
   document.getElementById("btn_make_play").disabled = true;
-  document.getElementById("btn_next").disabled = true;
-  document.getElementById("btn_finish").disabled = true;
+  document.getElementById("btn_next_action").disabled = true;
+  document.getElementById("btn_next_iteration").disabled = true;
+  document.getElementById("btn_last_step").disabled = true;
+}
+
+function isLastStep() {
+  return currentIterationIdx == action_trace.length - 1
+    && currentActionIdx == action_trace[action_trace.length - 1].length - 1;
+}
+
+function toggleCollapse(node) {
+  debugger;
+  let reconstructed_node = reconstructed_tree.nodes.find((f) => f.data.action_id == node.data.action_id);
+  reconstructed_node.data.collapsed = !reconstructed_node.data.collapsed;
+  
+  draw_tree = makeDrawTree(reconstructed_tree);
+  sendDrawTree(draw_tree);
+
+  tree_vis_p5.focusNode(node, true);
 }

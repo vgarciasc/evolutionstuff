@@ -12,7 +12,9 @@ const vis = (s) => {
   let hovered_node_id = -1;
   let hovered_node_pos = {x: 0, y: 0};
 
-  let node_size = {x: 50, y: 80};
+  let node_distance = {x: 0.75, y: 0.75};
+
+  let node_size = {x: 50, y: 90};
 
   s.setup = () => {
     s.textFont("Courier");
@@ -54,8 +56,8 @@ const vis = (s) => {
     }
 
   	s.push();
-  	s.translate(node.data.final_x * 2 * node_size.x,
-  		          node.data.y       * 2 * node_size.y);
+  	s.translate(node.data.final_x * (1 + node_distance.x) * node_size.x,
+  		          node.data.y       * (1 + node_distance.y) * node_size.y);
 
     s.toggleNodeColors(node);
 
@@ -66,19 +68,19 @@ const vis = (s) => {
 
   	//drawing edges
     if (!node.isRoot()) {
+      let dashlength = - node_distance.y/2 * node_size.y;
       if (node.data.simulated_board) {
-        let dashlength = - node_size.y/2;
         let total_dashes = 10;
         for (var i = 1; i < total_dashes; i += 2) {
           s.line(node_size.x / 2, i * dashlength / total_dashes, node_size.x / 2, (i-1) * dashlength / total_dashes);
         }
       } else {
-      	 s.line(node_size.x / 2, 0, node_size.x / 2, - node_size.y/2);
+      	 s.line(node_size.x / 2, 0, node_size.x / 2, dashlength);
       }
     }
 
     if (!node.isLeaf()) {
-  		s.line(node_size.x / 2, node_size.y, node_size.x / 2, node_size.y * 1.5);
+  		s.line(node_size.x / 2, node_size.y, node_size.x / 2, (1 + node_distance.y/2) * node_size.y);
     }
 
   	if (node.data.should_show_collapse_btn) {
@@ -95,10 +97,11 @@ const vis = (s) => {
     s.toggleActionColors(null);
   	//drawing edges
   	if (children.length > 0 && !node.data.collapsed) {
-  		s.line((children[0].data.final_x * 2 + 1/2) * node_size.x,
-  			   (2 * node.data.y + 3/2) * node_size.y,
-  			   (children[children.length - 1].data.final_x * 2+ 1/2) * node_size.x,
-  			   (2 * node.data.y + 3/2) * node_size.y);
+  		s.line(
+           (children[0].data.final_x * (1 + node_distance.x) + 1/2) * node_size.x,
+           (node.data.y) * (1 + node_distance.y) * node_size.y + node_size.y + node_distance.y/2 * node_size.y,
+           (children[children.length - 1].data.final_x * (1 + node_distance.x) + 1/2) * node_size.x,
+           (node.data.y) * (1 + node_distance.y) * node_size.y + node_size.y + node_distance.y/2 * node_size.y);
   	}
   }
 
@@ -115,7 +118,17 @@ const vis = (s) => {
       s.fill(255);
     }
 
+    if (node.data.best_move) {
+      s.strokeWeight(3);
+      s.stroke(255, 0, 0);
+    }
+    
     s.rect(0, 0, node_size.x, node_size.y);
+
+    if (node.data.best_move) {
+      s.strokeWeight(1);
+      s.stroke(0);
+    }
 
     for (var j = 0; j < 3; j++) {
       for (var i = 0; i < 3; i++) {
@@ -150,20 +163,29 @@ const vis = (s) => {
     }
     
     s.push();
-    s.textSize(tile_size * 0.5);
+    s.textSize(tile_size * 0.4);
 
     s.translate(0, (node_size.y - node_size.x) / 10);
     
     if (!node.isRoot()) {
+      let uct = UCB1(node, s.tree.getParent(node)).toFixed(2);
+      if (isNaN(uct)) {
+        uct = "--";
+      } 
+
       s.textAlign(s.LEFT, s.TOP);
-      s.text(" va:", 0, node_size.x);
-      s.text(" vi:", 0, node_size.x + (node_size.y - node_size.x) / 3);
+      s.text(" val:", 0, node_size.x);
+      s.text(" vis:", 0, node_size.x + (node_size.y - node_size.x) / 4);
+      s.text(" uct:", 0, node_size.x + 2 * (node_size.y - node_size.x) / 4);
       s.textAlign(s.RIGHT, s.TOP);
       s.text(value + " ", node_size.x, node_size.x);
-      s.text(visits + " ", node_size.x, node_size.x + (node_size.y - node_size.x) / 3);
+      s.text(visits + " ", node_size.x, node_size.x + (node_size.y - node_size.x) / 4);
+      s.text(uct + " ", node_size.x, node_size.x + 2 * (node_size.y - node_size.x) / 4);
     } else {
-      s.textAlign(s.CENTER, s.BOTTOM);
-      s.text("root", node_size.x / 2, (node_size.y - node_size.x) / 2 + node_size.x);
+      s.textAlign(s.LEFT, s.TOP);
+      s.text(" vis:", 0, node_size.x + (node_size.y - node_size.x) / 4);
+      s.textAlign(s.RIGHT, s.TOP);
+      s.text(visits + " ", node_size.x, node_size.x + (node_size.y - node_size.x) / 4);
     }
     
     s.pop();
@@ -224,8 +246,8 @@ const vis = (s) => {
       y: onMouse ? (s.mouseY - hovered_node_pos.y) : (s.height / 2),
     };
 
-    offset.x = - node.data.final_x * 2 * node_size.x + centered.x;
-    offset.y = - node.data.y       * 2 * node_size.y + centered.y;
+    offset.x = - node.data.final_x * (1 + node_distance.x) * node_size.x + centered.x;
+    offset.y = - node.data.y       * (1 + node_distance.y) * node_size.y + centered.y;
     zoom = 1;
   }
 
@@ -264,8 +286,8 @@ const vis = (s) => {
       for (var i = 0; i < s.tree.nodes.length; i++) {
         let node = s.tree.nodes[i];
         let bounds = {
-          x_min:  (node.data.final_x * 2 * node_size.x) * zoom + offset.x,
-          y_min:  (node.data.y       * 2 * node_size.y) * zoom + offset.y,
+          x_min:  (node.data.final_x * (1 + node_distance.x) * node_size.x) * zoom + offset.x,
+          y_min:  (node.data.y       * (1 + node_distance.y) * node_size.y) * zoom + offset.y,
           width:  node_size.x * zoom,
           height: node_size.y * zoom      
         };

@@ -39,19 +39,20 @@ class MCTS {
         return selectActions.concat(expandActions.concat(simulationActions.concat(backpropagatedActions)));
     }
 
-    runSearch(timeout=1) {
-        let end = Date.now() + timeout * 1000;
+    runSearch(iterations=50) {
+        // let end = Date.now() + timeout * 1000;
         let trace = [];
 
         var i = 0;
-        while (Date.now() < end) {
-        // for (var i = 0; i < 50; i++) {
+        // while (Date.now() < end) {
+        for (var i = 0; i < iterations; i++) {
             let iterationTrace = this.runSearchIteration();
-            trace = trace.concat(iterationTrace);
+            trace.push(iterationTrace);
         }
 
-        let bestMove = this.tree.getChildren(this.tree.get(0)).reduce((a, b) => a.data.simulations > b.data.simulations ? a : b).data.move;
-        return {move: bestMove, trace: trace};
+        let best_move_node = this.tree.getChildren(this.tree.get(0)).reduce((a, b) => a.data.simulations > b.data.simulations ? a : b);
+        trace.push([new AlgAction("finish", best_move_node.id, null, null)]);
+        return {move: best_move_node.data.move, trace: trace};
     }
 
     getBestChildUCB1(node) {
@@ -137,7 +138,7 @@ class MCTS {
                 node.data.value -= 2;
             }
         
-            actions.concat(this.backpropagate(this.tree.getParent(node), winner));
+            actions = actions.concat(this.backpropagate(this.tree.getParent(node), winner).actions);
         }
 
         action.new_data = {
@@ -145,7 +146,7 @@ class MCTS {
             new_visits: node.data.simulations
         };
 
-        actions.push(action);
+        actions.unshift(action);
 
         return {actions: actions};
     }

@@ -46,9 +46,9 @@
                     <br>
                     Run MCTS for:
                     <br>
-                    <input id="mcts_timeout_slider" type="range" min="0" max="10" value="1"/>
+                    <input id="mcts_timeout_slider" type="range" min="100" max="5000" value="100" step="100"/>
                     <br>
-                    <span id="mcts_timeout_span"><b>1</b></span> seconds
+                    <span id="mcts_timeout_span"><b>1</b></span> iterations
                 </div>
             </div>
             <div id="game_over_area">
@@ -60,22 +60,28 @@
             </div>
         </div>
         <div style="width: auto; margin-left: 2em; float: left; border: solid 1px black">
-            <div style="border: solid 1px lightgrey; height: 50px">
-                <div style="float: left;">
-                    <div>
-                        <button style="width: 200px;" id="btn_make_play" disabled>make play</button>
-                    </div>
-                    <div>
-                        <button style="float: left; width: 100px;" id="btn_next" disabled>next &gt;</button>
-                        <button style="float: left; width: 100px;" id="btn_finish" disabled>finish &gt;&gt;</button>
-                    </div>
-                </div>
-                <div style="float: left; height: 100%; padding: 0.25em">
+            <div style="border: solid 1px lightgrey; height: 70px">
+                <div style="float: left; height: 100%; width: auto; padding: 0.25em">
                     <b>Current action</b>:
+                    <br>
+                    <span id="current_action_count">(0/0)</span>
                     <br>
                     <span id="current_action_kind">---</span>
                     <br>
-                    <span id="current_action_count">(0/0)</span>
+                    <button id="btn_next_action" disabled>next action &gt;</button>
+                </div>
+                <div style="float: left; height: 100%; width: auto; padding: 0.25em;">
+                    <b>Current iteration</b>:
+                    <br>
+                    <span id="current_iteration_count">(0/0)</span>
+                    <br>
+                    <br>
+                    <button id="btn_next_iteration" disabled>next iteration &gt;&gt;</button>
+                </div>
+                <div style="float: left; height: 100%; width: auto; margin-top: 0.2em; margin-bottom: 0.2em;">
+                    <button style="width: 200px; height: 45%; margin-bottom: 0.2em;" id="btn_last_step" disabled>visualize last step &gt;&gt;&gt;</button>
+                    <br>
+                    <button style="width: 200px; height: 45%;" id="btn_make_play" disabled>make play</button>
                 </div>
             </div>
             <div id="tree_vis"></div>

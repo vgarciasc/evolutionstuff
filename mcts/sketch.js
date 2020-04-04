@@ -20,7 +20,8 @@ const GameStates = Object.freeze({
     SELECT_STARTING_PLAYER: 0, 
     WAITING_HUMAN_MOVE: 1,
     WAITING_MACHINE_MOVE: 2,
-    GAME_OVER: 3
+    GAME_OVER: 3,
+    RUNNING_VIS: 4
 });
 var currentGameState;
 
@@ -107,6 +108,9 @@ const s = (sketch) => {
                 whoseTurnSpan.html(whoseTurn == PLAYER.HUMAN ? "HUMAN" : "MACHINE");
                 machineControlsArea.show();
                 break;
+            case GameStates.RUNNING_VIS:
+                machineControlsArea.hide();
+                break;
             case GameStates.GAME_OVER:
                 gameOverArea.show();
                 let winner = TTT_BOARD.checkWin();
@@ -163,8 +167,9 @@ const s = (sketch) => {
         let monteCarlo = new MCTS(TTT_BOARD.copy(), PLAYER.MACHINE);
         let MCTS_search = monteCarlo.runSearch(mctsTimeoutSlider.value());
         // TTT_BOARD.makeMove(MCTS_search.move);
-        sketch.endMove(PLAYER.MACHINE);
+        // sketch.endMove(PLAYER.MACHINE);
         setMCTS(monteCarlo, MCTS_search);
+        sketch.stateTransition(GameStates.RUNNING_VIS);
     }
 
     sketch.machineGaMove = () => {
