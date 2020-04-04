@@ -27,8 +27,16 @@ const VisualizationStates = Object.freeze({
 let current_vis_state = 0;
 
 function transitionToState(new_state) {
+  current_vis_state = new_state;
+  
   switch (new_state) {
     case VisualizationStates.NONE:
+      currentActionIdx = 0;
+      currentIterationIdx = 0;
+      totalActionsTillNow = 0;
+      updateInterface();
+      sendDrawTree(null);
+
       document.getElementById("btn_next_iteration").disabled = true;
       document.getElementById("btn_next_action").disabled = true;
       document.getElementById("btn_last_step").disabled = true;
@@ -47,8 +55,6 @@ function transitionToState(new_state) {
       document.getElementById("btn_make_play").disabled = false;
       break;
   }
-
-  current_vis_state = new_state;
 }
 
 function setupInteractive() {
@@ -56,12 +62,10 @@ function setupInteractive() {
   document.getElementById("btn_next_iteration").addEventListener("click", clickNextIteration);
   document.getElementById("btn_last_step").addEventListener("click", clickVisualizeLastStep);
   document.getElementById("btn_make_play").addEventListener("click", clickMakePlay);
+  transitionToState(VisualizationStates.NONE);
 }
 
 function setMCTS(mcts_obj, trace) {
-  currentActionIdx = 0;
-  currentIterationIdx = 0;
-
   initial_board = mcts_obj.model.copy();
   action_trace = trace.trace;
   best_move = trace.move;
@@ -72,7 +76,7 @@ function setMCTS(mcts_obj, trace) {
 
   tree_vis_p5.initial_board = initial_board;
 
-  transitionToState(VisualizationStates.NONE);
+  transitionToState(VisualizationStates.VISUALIZING);
   clickNextAction();
 
   tree_vis_p5.focusNode(tree_vis_p5.tree.getRoot());
@@ -88,9 +92,11 @@ function updateInterface() {
   let action_progress_bar = "(-/-)";
   let iteration_progress_bar = "(-/-)";
 
-  action_kind = action_trace[currentIterationIdx][currentActionIdx].kind;
-  action_progress_bar = "(" + totalActionsTillNow + "/" + (action_trace.flat().length - 1) + ")";
-  iteration_progress_bar = "(" + currentIterationIdx + "/" + (action_trace.length - 1) + ")";
+  if (current_vis_state != VisualizationStates.NONE) {
+    action_kind = action_trace[currentIterationIdx][currentActionIdx].kind;
+    action_progress_bar = "(" + totalActionsTillNow + "/" + (action_trace.flat().length - 1) + ")";
+    iteration_progress_bar = "(" + currentIterationIdx + "/" + (action_trace.length - 1) + ")";
+  }
 
   document.getElementById("current_action_kind").innerHTML = action_kind;
   document.getElementById("current_action_kind").className = action_kind;
@@ -162,7 +168,7 @@ function applyAction(action) {
 
 // CONTROL
 
-function clickNextAction() {
+function clickNextAction(send_tree=true) {
   if (isLastStep()) {
     transitionToState(VisualizationStates.LAST_STEP);
     return;
@@ -180,27 +186,31 @@ function clickNextAction() {
   let action = action_trace[currentIterationIdx][currentActionIdx];
   applyAction(action);
 
-  draw_tree = makeDrawTree(reconstructed_tree);
-  sendDrawTree(draw_tree);
+  if (send_tree) {
+    draw_tree = makeDrawTree(reconstructed_tree);
+    sendDrawTree(draw_tree);
 
-  transitionToState(VisualizationStates.VISUALIZING);
+    transitionToState(VisualizationStates.VISUALIZING);
+  }
 }
 
-function clickNextIteration() {
+function clickNextIteration(send_tree=true) {
   if (isLastStep()) {
     transitionToState(VisualizationStates.LAST_STEP);
     return;
   }
 
   let iteration = action_trace[currentIterationIdx];
-  for (var i = 0; i < iteration.length; i++) {
-    clickNextAction();
+  for (var i = 0; i < iteration.length - 1; i++) {
+    clickNextAction(false);
   }
+
+  clickNextAction(send_tree); //last action sends the tree if necessary
 }
 
 function clickVisualizeLastStep() {
   for (var i = currentIterationIdx; i < action_trace.length; i++) {
-    clickNextIteration();
+    clickNextIteration(send_tree=false);
   }
 
   draw_tree = makeDrawTree(reconstructed_tree);
@@ -221,14 +231,7 @@ function clickVisualizeLastStep() {
 function clickMakePlay() {
   myp5.makeMove(best_move);
   myp5.endMove(best_move.player);
-  currentActionIdx = -1;
-  action_trace = [];
-  sendDrawTree(null);
-
-  document.getElementById("btn_make_play").disabled = true;
-  document.getElementById("btn_next_action").disabled = true;
-  document.getElementById("btn_next_iteration").disabled = true;
-  document.getElementById("btn_last_step").disabled = true;
+  transitionToState(VisualizationStates.NONE);
 }
 
 function isLastStep() {
@@ -237,7 +240,6 @@ function isLastStep() {
 }
 
 function toggleCollapse(node) {
-  debugger;
   let reconstructed_node = reconstructed_tree.nodes.find((f) => f.data.action_id == node.data.action_id);
   reconstructed_node.data.collapsed = !reconstructed_node.data.collapsed;
   
