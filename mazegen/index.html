@@ -1,0 +1,28 @@
+<meta charset="utf-8">
+<html>
+    <head>
+        <title>petrievo</title>
+        <!-- <link rel="stylesheet" href="../style.css"> -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/p5.min.js" integrity="sha256-WVsM3xrcqyuFNF3W1qtIKbHFsD0977nDQA8DCMp1zCw=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/addons/p5.dom.min.js" integrity="sha256-2/3R3NV5zryj0fDjD3cDh+SNiWQ/TJiMVZzAo5FrhiU=" crossorigin="anonymous"></script>
+        <script src="./utils.js"></script>
+        <script src="./grid.js"></script>
+        <script src="./grid_element.js"></script>
+        <script src="./wall.js"></script>
+        <script src="./random_walker.js"></script>
+        <script src="./ca.js"></script>
+        <script src="./sketch.js"></script>
+        <script>document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')
+        </script>
+        
+    </head>
+    <body>
+        <div id="canvascontainer"></div>
+        <button onclick="grid.iterate()">next iteration</button>
+        <button onclick="setup()">reset</button>
+        <br>
+        <input id="wall_neighbors_input" type="number" min="0" max="8" value="4"> wall neighbors</input>
+        <br>
+        <input id="nothing_neighbors_input" type="number" min="0" max="8" value="5"> nothing neighbors</input>
+    </body>
+</html>
