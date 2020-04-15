@@ -25,20 +25,16 @@
 
 (defn train
   [train-data initial-weights]
-  (loop [w initial-weights
-         k 0]
-    (if (< k 100)
-      (let [misclassified-pts (get-misclassified-observations train-data w)]
-        (if (not (empty? misclassified-pts))
-          (let [misclassified-pt (rand-nth misclassified-pts)
-                x_i (include-bias (first misclassified-pt))
-                y_i (second misclassified-pt)]
-            (if (not (nil? misclassified-pt))
-              (recur (m/add w (m/emul y_i x_i))
-                     (inc k))
-              ))
-          [w k]))
-      [w k])))
+  (loop [w initial-weights, iterations 0]
+    (let [misclassified-pts (get-misclassified-observations train-data w)]
+      (if-not (empty? misclassified-pts)
+        (let [misclassified-pt (rand-nth misclassified-pts)
+              x_i (include-bias (first misclassified-pt))
+              y_i (second misclassified-pt)]
+          (when-not (nil? misclassified-pt)
+            (recur (m/add w (m/emul y_i x_i))
+                   (inc iterations))))
+        [w iterations]))))
 
 (defn line
   [x1 y1 x2 y2]
@@ -106,4 +102,5 @@
   (println "Q7:" (avg-iterations-to-converge 10))
   (println "Q8:" (calculate-prob 10))
   (println "Q9:" (avg-iterations-to-converge 100))
-  (println "Q10:" (calculate-prob 100)))
+  (println "Q10:" (calculate-prob 100))
+  )
