@@ -1,4 +1,5 @@
 let grid = null;
+let main_agent = null;
 
 function setup() {
     let canvas = createCanvas(500, 500);
@@ -8,8 +9,10 @@ function setup() {
         {classname: VyAgent, collidable: [VyAgent, Wall]},
         {classname: Food, collidable: []}
     ]);
-
-    grid.addElement(new VyAgent(createVector(5, 5)));
+    
+    main_agent = new VyAgent(createVector(5, 5));
+    grid.addElement(main_agent);
+    
     grid.addElement(new Food(createVector(7, 7)));
     for (var i = 0; i < 10; i++) {
         grid.addElement(new Wall(createVector(i, 0)));
@@ -20,9 +23,12 @@ function setup() {
 
     setInterval(() => {
         grid.iterate();
-    }, 500);
+    }, 100);
 }
 
 function draw() {
     grid.render();
+    select("#activity_span").html(Object.keys(ActivityEnum)[main_agent.crt_activity]);
+    select("#hunger_span").html(main_agent.hunger.toFixed(2));
+    select("#tiredness_span").html(main_agent.tiredness.toFixed(2));
 }

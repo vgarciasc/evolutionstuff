@@ -1,16 +1,19 @@
 class GridElement {
     constructor(pos) {
         this.pos = pos;
+        
         this.tags = this.defineTags();
+        this.defineFields();
     }
 
     defineTags() { return []; }
-
+    defineFields() { }
+    
     isTag(tag) { return this.tags.find((f) => f == tag) != null }
 
     render(tile_size) { }
-
     iterate(grid) { }
+    onCollide(grid, collided) { }
 
     move(grid, dir) {
         let new_pos = p5.Vector.add(this.pos, dir);
@@ -36,6 +39,4 @@ class GridElement {
 
         this.move(grid, next_vec);
     }
-
-    onCollide(grid, collided) { }
 }
