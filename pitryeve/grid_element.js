@@ -27,7 +27,10 @@ class GridElement {
         }
     }
 
-    moveTowards(grid, target_pos) {
+    moveTowards(grid, target) {
+        let target_pos = typecast(target, p5.Vector);
+        if (!target_pos) return;
+
         let diff = p5.Vector.sub(target_pos, this.pos);
         
         let next_vec = createVector(0, 0);

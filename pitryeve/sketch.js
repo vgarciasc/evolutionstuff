@@ -14,6 +14,7 @@ function setup() {
     grid.addElement(main_agent);
     
     grid.addElement(new Food(createVector(7, 7)));
+    grid.addElement(new Food(createVector(3, 3)));
     for (var i = 0; i < 10; i++) {
         grid.addElement(new Wall(createVector(i, 0)));
         grid.addElement(new Wall(createVector(0, i)));

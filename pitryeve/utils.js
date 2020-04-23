@@ -30,3 +30,17 @@ class Directions {
         }
     }
 }
+
+function typecast(object, type) {
+    if (object == null || object == undefined) { return object; }
+
+    if (type == p5.Vector) {
+        if (object.constructor == p5.Vector) {
+            return object;
+        } else {
+            return object.pos;
+        }
+    }
+
+    return object;
+}

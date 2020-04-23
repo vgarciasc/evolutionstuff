@@ -8,6 +8,18 @@ class VyAgent extends GridElement {
         this.crt_activity = ActivityEnum.LAPE;
         this.hunger = 0;
         this.tiredness = 0;
+
+        let lapeTree = new Tree(new Node(new GenInstruction(InstructionTypes.OPERATOR, OperatorTypes.NOOP)));
+        
+        let mokuTree = new Tree(new Node(new GenInstruction(InstructionTypes.OPERATOR, OperatorTypes.MOVE_TOWARDS)));
+        mokuTree.insert(new Node(new GenInstruction(InstructionTypes.OPERATOR, OperatorTypes.NEAREST)), mokuTree.get(0));
+        mokuTree.insert(new Node(new GenInstruction(InstructionTypes.OPERAND, OperandTypes.FOOD)), mokuTree.get(1));
+        // let mokuTree = new Tree(new Node(new GenInstruction(InstructionTypes.OPERATOR, OperatorTypes.MOVE_RANDOM)));
+
+        this.programs = {
+            LAPE: lapeTree,
+            MOKU: mokuTree
+        };
     }
 
     render(tile_size) {
@@ -25,10 +37,10 @@ class VyAgent extends GridElement {
         //act
         switch (this.crt_activity) {
             case ActivityEnum.LAPE:
-                this.lapeActivity(grid);
+                this.executeProgram(grid, this.programs.LAPE);
                 break;
             case ActivityEnum.MOKU:
-                this.mokuActivity(grid);
+                this.executeProgram(grid, this.programs.MOKU);
                 break;
         }
     }
@@ -41,8 +53,10 @@ class VyAgent extends GridElement {
     }
 
     updateNecessities() {
-        this.hunger = constrain(this.hunger + 0.025, 0, 1);
-        this.tiredness = constrain(this.tiredness - 0.05, 0, 1);
+        let damper = 0.25;
+
+        this.hunger = constrain(this.hunger + 0.1 * damper, 0, 1);
+        this.tiredness = constrain(this.tiredness + 0.005 * damper, 0, 1);
     }
 
     updateActivity() {
@@ -61,6 +75,10 @@ class VyAgent extends GridElement {
         this.crt_activity = max_util.actv;
     }
 
+    executeProgram(grid, program) {
+        GenInstruction.execute(grid, this, program, program.get(0));
+    }
+
     lapeActivity(grid) {
         //noop
     }
@@ -77,12 +95,13 @@ class VyAgent extends GridElement {
 
     move(grid, dir) {
         super.move(grid, dir);
-        this.tiredness = constrain(this.tiredness + 0.1, 0, 1);
+        this.tiredness = constrain(this.tiredness + 0.02, 0, 1);
     }
 
     onCollide(grid, collided) { 
         if (collided.isTag("Food")) {
             grid.removeElement(collided);
+            this.hunger = constrain(this.hunger - 0.5, 0, 1);
         }
     }
 }
