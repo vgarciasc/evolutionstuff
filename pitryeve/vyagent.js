@@ -8,17 +8,12 @@ class VyAgent extends GridElement {
         this.crt_activity = ActivityEnum.LAPE;
         this.hunger = 0;
         this.tiredness = 0;
+    }
 
-        let lapeTree = new Tree(new Node(new GenInstruction(InstructionTypes.OPERATOR, OperatorTypes.NOOP)));
-        
-        let mokuTree = new Tree(new Node(new GenInstruction(InstructionTypes.OPERATOR, OperatorTypes.MOVE_TOWARDS)));
-        mokuTree.insert(new Node(new GenInstruction(InstructionTypes.OPERATOR, OperatorTypes.NEAREST)), mokuTree.get(0));
-        mokuTree.insert(new Node(new GenInstruction(InstructionTypes.OPERAND, OperandTypes.FOOD)), mokuTree.get(1));
-        // let mokuTree = new Tree(new Node(new GenInstruction(InstructionTypes.OPERATOR, OperatorTypes.MOVE_RANDOM)));
-
+    initializePrograms(mokuProgram, lapeProgram) {
         this.programs = {
-            LAPE: lapeTree,
-            MOKU: mokuTree
+            LAPE: lapeProgram,
+            MOKU: mokuProgram
         };
     }
 
@@ -76,7 +71,7 @@ class VyAgent extends GridElement {
     }
 
     executeProgram(grid, program) {
-        GenInstruction.execute(grid, this, program, program.get(0));
+        GenProgram.execute(grid, this, program, program.get(0));
     }
 
     lapeActivity(grid) {

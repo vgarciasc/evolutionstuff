@@ -1,51 +1,74 @@
-const InstructionTypes = Object.freeze({ OPERATOR: 0, OPERAND: 1 });
+class Operand { 
+    constructor(name) {
+        this.type = "Operand";
+        this.name = name;
+    }
+}
 
-const OperatorTypes = Object.freeze({
-    IF: 0,
-    DO: 1,
-    MOVE_TOWARDS: 2,
-    MOVE_RANDOM: 3,
-    NEAREST: 4,
-    NOOP: 5,
-});
+class Operator { 
+    constructor(name, arity) {
+        this.type = "Operator";
+        this.name = name;
+        this.arity = arity;
+    }
+}
 
 const OperandTypes = Object.freeze({
-    FOOD: 0
+    FOOD: new Operand("Food"),
+    WALL: new Operand("Wall")
 })
 
+const OperatorTypes = Object.freeze({
+    IF: new Operator("IF", 3),
+    DO: new Operator("DO", -1),
+    MOVE_TOWARDS: new Operator("MOVE_TOWARDS", 1),
+    MOVE_RANDOM: new Operator("MOVE_RANDOM", 0),
+    NEAREST: new Operator("NEAREST", 1),
+    NOOP: new Operator("NOOP", 0),
+});
+
 class GenInstruction {
-    constructor(type, value) {
-        this.type = type;
-        this.value = value;
+    constructor(val) {
+        this.val = val;
     }
-    
+}
+
+class GenProgram {    
     static execute(grid, agent, program, instruction) {        
-        switch (instruction.data.type) {
-            case InstructionTypes.OPERATOR:
+        switch (instruction.data.val.type) {
+            case "Operator":
                 return this.executeOperator(grid, agent, program, instruction);
-            case InstructionTypes.OPERAND:
+            case "Operand":
                 return this.retrieveOperand(grid, agent, program, instruction);               
         }
     }
 
     static executeOperator(grid, agent, program, instruction) {
         let children = program.getChildren(instruction);
-        let operator = instruction.data.value;
+        let operator = instruction.data.val;
 
-        switch (operator) {
-            case OperatorTypes.NOOP:
+        switch (operator.name) {
+            case "IF":
+                if (this.execute(grid, agent, program, children[0])) {
+                    this.execute(grid, agent, program, children[1]);
+                } else if (children.length > 2) {
+                    this.execute(grid, agent, program, children[2]);
+                }
                 break;
-            case OperatorTypes.MOVE_RANDOM:
+            case "NOOP":
+                break;
+            case "MOVE_RANDOM":
                 let random_dir = Directions.randomDir();
                 agent.move(grid, random_dir);
                 break;
-            case OperatorTypes.MOVE_TOWARDS:
+            case "MOVE_TOWARDS":
                 let target = this.execute(grid, agent, program, children[0]);
                 agent.moveTowards(grid, target);
                 break;
-            case OperatorTypes.NEAREST:
+            case "NEAREST":
                 let tag = this.execute(grid, agent, program, children[0]);
                 let nearest_elem = grid.elements.find((f) => f.tags.indexOf(tag) != -1);
+                //TODO: not getting nearest!
                 return nearest_elem;
         }
 
@@ -53,14 +76,18 @@ class GenInstruction {
     }
 
     static retrieveOperand(grid, agent, program, instruction) {
-        let operand = instruction.data.value;
-
-        switch (operand) {
-            case OperandTypes.FOOD:
-                return "Food";
+        let operand = instruction.data.val;
+        switch (operand.name) {
+            case "Food":
+            case "Wall":
+                return operand.name; 
             default:
                 console.error("This should not be happening.");
                 return undefined;
         }
     }
+
+    // static mutate(program) {
+
+    // }
 }
