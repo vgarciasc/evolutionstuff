@@ -10,7 +10,7 @@ class VyAgent extends GridElement {
         this.tiredness = 0;
     }
 
-    initializePrograms(mokuProgram, lapeProgram) {
+    initializePrograms(lapeProgram, mokuProgram) {
         this.programs = {
             LAPE: lapeProgram,
             MOKU: mokuProgram
@@ -43,7 +43,7 @@ class VyAgent extends GridElement {
     handleHealth(grid) {
         if (this.hunger * this.tiredness > 0.6) {
             //die
-            grid.removeElement(this);
+            // grid.removeElement(this);
         }
     }
 
@@ -51,7 +51,7 @@ class VyAgent extends GridElement {
         let damper = 0.25;
 
         this.hunger = constrain(this.hunger + 0.1 * damper, 0, 1);
-        this.tiredness = constrain(this.tiredness + 0.005 * damper, 0, 1);
+        this.tiredness = constrain(this.tiredness + (0.05 - (1 - this.hunger) * 0.01) * damper, 0, 1);
     }
 
     updateActivity() {
@@ -73,19 +73,9 @@ class VyAgent extends GridElement {
     executeProgram(grid, program) {
         GenProgram.execute(grid, this, program, program.get(0));
     }
-
-    lapeActivity(grid) {
-        //noop
-    }
-
-    mokuActivity(grid) {
-        let nearest_food = grid.elements.find((f) => f.tags.indexOf("Food") != -1);
-        if (nearest_food) {
-            this.moveTowards(grid, nearest_food.pos);
-        } else {
-            let random_dir = Directions.randomDir();
-            this.move(grid, random_dir);
-        }
+    
+    calculateFitness() {
+        return 1 - this.hunger * this.tiredness;
     }
 
     move(grid, dir) {

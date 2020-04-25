@@ -87,7 +87,33 @@ class GenProgram {
         }
     }
 
-    // static mutate(program) {
+    static mutate(program) {
+        let mutated = program.copy();
 
-    // }
+        let random_node = random(mutated.nodes);
+        let removed_parent_id = random_node.parent_id;
+
+        if (removed_parent_id == -1) return mutated;
+        
+        mutated.remove(random_node);
+        
+        let mutated_node = new Node(new GenInstruction(randomKey(OperatorTypes)));
+        mutated.insert(mutated_node, mutated.get(removed_parent_id));
+        for (var i = 0; i < mutated_node.data.val.arity; i++) {
+            mutated.insert(new Node(new GenInstruction(randomKey(OperandTypes))), mutated_node);
+        }
+
+        return mutated;
+    }
+
+    static crossover(p1, p2) {
+        let m_p1 = p1.copy();
+        let m_p2 = p2.copy();
+
+        let p1_cut = random(p1.nodes);
+        let p2_cut = random(p2.nodes);
+        
+        m_p1.cut_id = p1_cut.parent_id;
+        m_p2.cut_id = p2_cut.parent_id;
+    }
 }

@@ -44,3 +44,7 @@ function typecast(object, type) {
 
     return object;
 }
+
+function randomKey(obj) {
+    return obj[random(Object.keys(obj))];
+}
