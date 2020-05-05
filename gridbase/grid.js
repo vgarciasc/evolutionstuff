@@ -1,14 +1,15 @@
 class Grid {
-    constructor(w, h, tile_size, elements = [], collisions = []) {
+    constructor(w, h, tile_size, elements = [], collisions = [], bgcolor = color(220)) {
         this.w = w;
         this.h = h;
         this.tile_size = tile_size;
         this.elements = elements;
         this.collisions = collisions;
+        this.bgcolor = bgcolor;
     }
 
     render() {
-        background(220);
+        background(this.bgcolor);
 
         this.elements.forEach((f) => {
             push();
@@ -34,12 +35,17 @@ class Grid {
 
     iterate() {
         this.elements.forEach((f) => {
-            f.iterate();
+            f.iterate(this);
         });
     }
 
     addElement(element) {
         this.elements.push(element);
+    }
+
+    removeElement(element) {
+        let idx = this.elements.findIndex((f) => f == element);
+        this.elements.splice(idx, 1);
     }
 
     shouldCollide(elem_1, elem_2) {
