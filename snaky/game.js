@@ -1,7 +1,7 @@
 class Game extends Grid {
     init() {
         this.score = 0;
-        this.lastDirectionPressed = DirEnum.RIGHT;
+        this.lastDirectionPressed = DirEnum.DOWN;
         this.isGameOver = false;
     }
 
@@ -56,7 +56,7 @@ class Game extends Grid {
     consume(food) {
         this.removeElement(food);
         this.addAnotherBody();
-        this.score += 10;
+        this.score += 1;
         this.spawnFood();
     }
 
@@ -65,7 +65,7 @@ class Game extends Grid {
     }
 
     die() {
-        this.score -= 9999;
+        this.score -= 1;
         this.isGameOver = true;
     }
 
@@ -78,7 +78,7 @@ class Game extends Grid {
             f.iterate(nextState);
         });
         
-        let reward = nextState.score - state.score;
+        let reward = (nextState.score - state.score);
 
         return {state: state, action: action, nextState: nextState, reward: reward};
     }

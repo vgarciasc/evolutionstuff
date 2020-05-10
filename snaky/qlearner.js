@@ -9,8 +9,6 @@ class QLearner {
     }
 
     init(state) {
-        this.weights.push(0); //bias
-
         var feats = this.extractFeatures(state, state.getLegalActions()[0]);
         for (var i = 0; i < feats.length; i++) {
             this.weights.push(0);
@@ -24,19 +22,60 @@ class QLearner {
         var food = state.elements.find((f) => f.isTag("Food"));
         var head = state.elements.find((f) => f.isTag("SnakeHead"));
         var new_head_pos = p5.Vector.add(head.pos, action_dir);
-        var colliding_with = state.getAt(new_head_pos);
+
+        var colliding_with = null;
+        var nearest_L_obst = null;
+        var nearest_R_obst = null;
+        var nearest_U_obst = null;
+        var nearest_D_obst = null;
+
+        state.elements.forEach((f) => {
+            if (f.isTag("Wall") || f.isTag("SnakeBody")) {
+                var diff_x = f.pos.x - new_head_pos.x;
+                var diff_y = f.pos.y - new_head_pos.y;
+
+                if (diff_x == 0 && diff_y == 0) {
+                    colliding_with = f;
+                }
+
+                if (f.pos.y == new_head_pos.y) {
+                    if (diff_x <= 0 && (!nearest_L_obst || diff_x > (nearest_L_obst.pos.x - new_head_pos.x))) {
+                        nearest_L_obst = f;
+                    }
+
+                    if (diff_x >= 0 && (!nearest_R_obst || diff_x < (nearest_R_obst.pos.x - new_head_pos.x))) {
+                        nearest_R_obst = f;
+                    }
+                }
+
+                if (f.pos.x == new_head_pos.x) {
+                    if (diff_y <= 0 && (!nearest_U_obst || diff_y > (nearest_U_obst.pos.y - new_head_pos.y))) {
+                        nearest_U_obst = f;
+                    }
+
+                    if (diff_y >= 0 && (!nearest_D_obst || diff_y < (nearest_D_obst.pos.y - new_head_pos.y))) {
+                        nearest_D_obst = f;
+                    }
+                }
+            }
+        });
+
+
+        var diff_L = (new_head_pos.x - nearest_L_obst.pos.x) / state.w;
+        var diff_R = (nearest_R_obst.pos.x - new_head_pos.x) / state.w;
+        var diff_U = (new_head_pos.y - nearest_U_obst.pos.y) / state.h;
+        var diff_D = (nearest_D_obst.pos.y - new_head_pos.y) / state.h;
+        var diff_vec = [diff_L, diff_R, diff_U, diff_D];
 
         // bias
         feats.push(1);
         
-        // distance to closest food
+        // distance to nearest food
         var feat_1 = 0;
         if (food && head) {
             feat_1 = abs((food.pos.x - new_head_pos.x) + (food.pos.y - new_head_pos.y)) / (state.w + state.h);
         }
         feats.push(feat_1);
-
-        if (DEBUG) { debugger; }
 
         // imminence of death by collision
         var feat_2 = 0;
@@ -47,38 +86,28 @@ class QLearner {
         }
         feats.push(feat_2);
 
-        //TODO: edit to make sense
-        // var feat_3 = 0;
-        // var dist_left = 1;
-        // for (var i = 0; i < new_head_pos.x; i++) {
-        //     let elem = state.getAt(createVector(i, new_head_pos.y));
-        //     if (elem && (elem.isTag("Wall") || elem.isTag("SnakeBody"))) {
-        //         dist_left = (new_head_pos.x - i) / state.w;
-        //     }
+        var feat_food = 0;
+        if (food.pos.x == new_head_pos.x && food.pos.y == new_head_pos.y) {
+            feat_food = 1;
+        }
+        feats.push(feat_food);
+
+        var feat_3 = (diff_L + diff_R + diff_U + diff_D) / 4;
+        feats.push(feat_3);
+
+        // var feat_4 = 0;
+        // var min_idx = diff_vec.findIndex((f) => f == min(diff_vec));
+        // var diff_vec_wout_min = diff_vec.slice(0, min_idx).concat(diff_vec.slice(min_idx + 1));
+        // var feat_4 = min(diff_vec_wout_min);
+        // feats.push(feat_4);
+
+        // var feat_5 = 0;
+        // var min_idx = diff_vec.findIndex((f) => f == min(diff_vec));
+        // var diff_vec_wout_min = diff_vec.slice(0, min_idx).concat(diff_vec.slice(min_idx + 1));
+        // if (diff_vec_wout_min[0] > 0.2 && diff_vec_wout_min[1] > 0.2 && diff_vec_wout_min[2] > 0.2) {
+        //     feat_5 = 1;
         // }
-        // var dist_right = 1;
-        // for (var i = new_head_pos.x + 1; i < state.w; i++) {
-        //     let elem = state.getAt(createVector(i, new_head_pos.y));
-        //     if (elem && (elem.isTag("Wall") || elem.isTag("SnakeBody"))) {
-        //         dist_right = (i - new_head_pos.x - 1) / state.w;
-        //     }
-        // }
-        // var dist_up = 1;
-        // for (var i = 0; i < new_head_pos.y; i++) {
-        //     let elem = state.getAt(createVector(new_head_pos.x, i));
-        //     if (elem && (elem.isTag("Wall") || elem.isTag("SnakeBody"))) {
-        //         dist_up = (new_head_pos.y - i) / state.h;
-        //     }
-        // }
-        // var dist_down = 1;
-        // for (var i = new_head_pos.y + 1; i < state.h; i++) {
-        //     let elem = state.getAt(createVector(i, new_head_pos.x));
-        //     if (elem && (elem.isTag("Wall") || elem.isTag("SnakeBody"))) {
-        //         dist_down = (i - new_head_pos.y - 1) / state.h;
-        //     }
-        // }
-        // feat_3 = (dist_down + dist_left + dist_up + dist_right) / 4;
-        // feats.push(feat_3);
+        // feats.push(feat_5);
 
         return feats;
     }
@@ -108,7 +137,7 @@ class QLearner {
         return total;
     }
 
-    observe(state, action, nextState, reward) {
+    observe(state, action, nextState, reward, episode_percent=1) {
         var actual = reward + this.discount * this.getValue(nextState);
         var expected = this.getQValue(state, action);
 
@@ -116,13 +145,18 @@ class QLearner {
         var feats = this.extractFeatures(state, action);
 
         for (var i = 0; i < feats.length; i++) {
-            this.weights[i] += this.learning_rate * diff * feats[i];
+            var learning_rate = (1 - episode_percent) * this.learning_rate;
+            this.weights[i] += learning_rate * diff * feats[i];
         }
     }
 
-    getAction(state) {
+    getAction(state, epsilon=0) {
         var possible_as = [];
         var possible_qs = [];
+
+        if (random(1) < epsilon) {
+            return random(game.getLegalActions());
+        }
 
         game.getLegalActions().forEach((action) => {
             possible_as.push(action);
