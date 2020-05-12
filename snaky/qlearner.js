@@ -73,7 +73,7 @@ class QLearner {
         // distance to nearest food
         var feat_1 = 0;
         if (food && head) {
-            feat_1 = abs((food.pos.x - new_head_pos.x) + (food.pos.y - new_head_pos.y)) / (state.w + state.h);
+            feat_1 = (abs(food.pos.x - new_head_pos.x) + abs(food.pos.y - new_head_pos.y)) / (state.w + state.h);
         }
         feats.push(feat_1);
 
@@ -86,14 +86,14 @@ class QLearner {
         }
         feats.push(feat_2);
 
-        var feat_food = 0;
-        if (food.pos.x == new_head_pos.x && food.pos.y == new_head_pos.y) {
-            feat_food = 1;
-        }
-        feats.push(feat_food);
+        // var feat_food = 0;
+        // if (food.pos.x == new_head_pos.x && food.pos.y == new_head_pos.y) {
+        //     feat_food = 1;
+        // }
+        // feats.push(feat_food);
 
-        var feat_3 = (diff_L + diff_R + diff_U + diff_D) / 4;
-        feats.push(feat_3);
+        // var feat_3 = (diff_L + diff_R + diff_U + diff_D) / 4;
+        // feats.push(feat_3);
 
         // var feat_4 = 0;
         // var min_idx = diff_vec.findIndex((f) => f == min(diff_vec));
@@ -137,7 +137,7 @@ class QLearner {
         return total;
     }
 
-    observe(state, action, nextState, reward, episode_percent=1) {
+    observe(state, action, nextState, reward, episode_percent=0) {
         var actual = reward + this.discount * this.getValue(nextState);
         var expected = this.getQValue(state, action);
 

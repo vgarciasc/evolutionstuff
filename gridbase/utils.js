@@ -22,11 +22,15 @@ class Directions {
 
     static getVec(dirEnum) {
         switch (dirEnum) {
-            case DirEnum.UP:    return createVector(  0,  1 );
-            case DirEnum.DOWN:  return createVector(  0, -1 );
+            case DirEnum.UP:    return createVector(  0, -1 );
+            case DirEnum.DOWN:  return createVector(  0,  1 );
             case DirEnum.LEFT:  return createVector( -1,  0 );
             case DirEnum.RIGHT: return createVector(  1,  0 );
             default: debugBreak(); return null;
         }
     }
+}
+
+function throwError() {
+    console.error("This should not be happening.");
 }

@@ -95,6 +95,10 @@ class Tree {
 		return this.get(0);
 	}
 
+	// getSubtree() {
+	// 	let new_tree = ;
+	// }
+
 	copy() {
 		let arr = []
 		for (var i = 0; i < this.nodes.length; i++) {

@@ -65,7 +65,7 @@ class Game extends Grid {
     }
 
     die() {
-        this.score -= 1;
+        this.score -= 99;
         this.isGameOver = true;
     }
 

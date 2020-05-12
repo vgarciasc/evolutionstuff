@@ -7,12 +7,20 @@ function setup() {
     let canvas = createCanvas(500, 500);
     canvas.parent('canvascontainer');
 
-    qlearner = new QLearner(0.2, 0.9)
+    // qlearner = new NeuralNetworkQLearner(0.2, 0.9)
+    qlearner = new QLearner(0.3, 0.9)
+
     qlearner.init(makeGame());
 
     let episodes = 1000;
     for (var i = 0; i < episodes; i++) {
         game = makeGame();
+
+        if (i % 10 == 0) {
+            // debugger;
+            console.log("finished episode #" + i + ", score: " + game.score);
+            // console.log(qlearner.weights);
+        }
 
         let k = 0;
         while (!game.isGameOver) {
@@ -22,19 +30,14 @@ function setup() {
                 game.isGameOver = true;
             }
 
-            game.lastDirectionPressed = qlearner.getAction(game, 0.2);
+            game.lastDirectionPressed = qlearner.getAction(game, 0.5);
             let observation = game.iterate();
             game = observation.nextState;
             qlearner.observe(observation.state, observation.action, observation.nextState, observation.reward, i / episodes);
         }
-
-        if (i % 10 == 0) {
-            console.log("finished episode #" + i + ", score: " + game.score);
-            // console.log(qlearner.weights);
-        }
     }
 
-    console.log(qlearner.weights);
+    // console.log(qlearner.weights);
 
     game = makeGame();
     setInterval(() => {
