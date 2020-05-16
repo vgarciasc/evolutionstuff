@@ -1,48 +1,52 @@
 let game = null;
 let game_size = {w: 25, h: 25}
 
-let qlearner = null;
-
 function setup() {
     let canvas = createCanvas(500, 500);
     canvas.parent('canvascontainer');
 
-    // qlearner = new NeuralNetworkQLearner(0.2, 0.9)
-    qlearner = new QLearner(0.3, 0.9)
+    let agents = {
+        QLEARNER: new QLearner(0.3, 0.9),
+        AQLEARNER: new NeuralNetworkQLearner(0.2, 0.9),
+        MCTS: new MctsLearner(0.1)
+    };
 
-    qlearner.init(makeGame());
+    let selectedAgent = agents.MCTS;
 
-    let episodes = 1000;
-    for (var i = 0; i < episodes; i++) {
-        game = makeGame();
+    if (selectedAgent == agents.QLEARNER || selectedAgent == agents.AQLEARNER) {
+        selectedAgent.init(makeGame());
 
-        if (i % 10 == 0) {
-            // debugger;
-            console.log("finished episode #" + i + ", score: " + game.score);
-            // console.log(qlearner.weights);
-        }
+        let episodes = 1000;
+        for (var i = 0; i < episodes; i++) {
+            game = makeGame();
 
-        let k = 0;
-        while (!game.isGameOver) {
-            k++;
-            if (k > 10000) {
-                console.error("should check...");
-                game.isGameOver = true;
+            if (i % 10 == 0) {
+                // debugger;
+                console.log("finished episode #" + i + ", score: " + game.score);
+                // console.log(qlearner.weights);
             }
 
-            game.lastDirectionPressed = qlearner.getAction(game, 0.5);
-            let observation = game.iterate();
-            game = observation.nextState;
-            qlearner.observe(observation.state, observation.action, observation.nextState, observation.reward, i / episodes);
+            let k = 0;
+            while (!game.isGameOver) {
+                k++;
+                if (k > 10000) {
+                    console.error("should check...");
+                    game.isGameOver = true;
+                }
+
+                game.lastDirectionPressed = selectedAgent.getAction(game, 0.5);
+                let observation = game.iterate();
+                game = observation.nextState;
+                selectedAgent.observe(observation.state, observation.action, observation.nextState, observation.reward, i / episodes);
+            }
         }
     }
 
-    // console.log(qlearner.weights);
-
     game = makeGame();
+
     setInterval(() => {
         if (!game.isGameOver) {
-            game.lastDirectionPressed = qlearner.getAction(game);
+            game.lastDirectionPressed = selectedAgent.getAction(game);
             let observation = game.iterate();
             game = observation.nextState;
         } else {

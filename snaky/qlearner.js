@@ -1,7 +1,8 @@
 DEBUG = false;
 
-class QLearner {
+class QLearner extends Learner {
     constructor(learning_rate, discount) {
+        super();
         this.learning_rate = learning_rate;
         this.discount = discount;
         
